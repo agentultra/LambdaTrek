@@ -26,7 +26,10 @@ source-repository head
 library
   exposed-modules:
       LambdaTrek
+      LambdaTrek.Command
+      LambdaTrek.Command.Parse
       LambdaTrek.UI
+      LambdaTrek.Units
   other-modules:
       Paths_LambdaTrek
   hs-source-dirs:
