@@ -1,4 +1,7 @@
 module LambdaTrek where
 
+import Brick (simpleMain)
+import LambdaTrek.UI
+
 run :: IO ()
-run = putStrLn "Hello, world!"
+run = simpleMain ui
