@@ -1,7 +1,16 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module LambdaTrek.State where
 
-newtype GameState
+import Data.Text (Text)
+import LambdaTrek.Command
+import Lens.Micro.TH
+
+data GameState
   = GameState
-  { _gameStateDisplayMessage :: String
+  { _gameStateCommandInput :: Text
+  , _gameStateCommand :: Maybe Command
   }
   deriving (Eq, Ord, Show)
+
+makeLenses ''GameState

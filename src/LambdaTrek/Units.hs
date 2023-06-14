@@ -9,7 +9,7 @@ data QuadrantRefX
   | F
   | G
   | H
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 data QuadrantRefY
   = I
@@ -20,7 +20,7 @@ data QuadrantRefY
   | O
   | P
   | Q
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 
 data QuadrantCoord
@@ -28,4 +28,4 @@ data QuadrantCoord
   { quadrantCoordX :: QuadrantRefX
   , quadrantCoordY :: QuadrantRefY
   }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)

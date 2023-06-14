@@ -1,14 +1,21 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module LambdaTrek.App where
 
 import Brick.AttrMap
+import Brick.Forms
 import Brick.Main
 import Brick.Types
+import qualified Data.Text as T
 import Graphics.Vty.Attributes (defAttr)
 import qualified Graphics.Vty as V
+import LambdaTrek.Command.Parse
 import LambdaTrek.Render
 import LambdaTrek.State
+import LambdaTrek.UI
+import Lens.Micro
 
-lambdaTrekApp :: App GameState e ()
+lambdaTrekApp :: App (Form GameState e Name) e Name
 lambdaTrekApp
   = App
   { appDraw         = lambdaRender
@@ -18,18 +25,23 @@ lambdaTrekApp
   , appAttrMap      = lambdaAttrMap
   }
 
-lambdaHandleEvent :: BrickEvent () e -> EventM () GameState ()
-lambdaHandleEvent (VtyEvent ev) = case ev of
-  V.EvResize _ _ -> pure ()
-  V.EvKey V.KEsc [] -> halt
-  _ -> pure ()
-lambdaHandleEvent _ = pure ()
+lambdaHandleEvent :: BrickEvent Name e -> EventM Name (Form GameState e Name) ()
+lambdaHandleEvent ev = case ev of
+  VtyEvent (V.EvResize _ _) -> pure ()
+  VtyEvent (V.EvKey V.KEsc []) -> halt
+  VtyEvent (V.EvKey V.KEnter []) -> do
+    s <- gets formState
+    let maybeCommand = runCommandParser . T.unpack $ s^.gameStateCommandInput
+    modify $ updateFormState s { _gameStateCommand = maybeCommand
+                               , _gameStateCommandInput = ""
+                               }
+  _ -> handleFormEvent ev
 
-lambdaChooseCursor :: GameState -> [CursorLocation n] -> Maybe (CursorLocation n)
+lambdaChooseCursor :: Form GameState e Name -> [CursorLocation Name] -> Maybe (CursorLocation Name)
 lambdaChooseCursor _ _ = Nothing
 
-lambdaStartEvent :: EventM n s ()
+lambdaStartEvent :: EventM Name s ()
 lambdaStartEvent = pure ()
 
-lambdaAttrMap :: GameState -> AttrMap
+lambdaAttrMap :: Form GameState e Name -> AttrMap
 lambdaAttrMap _ = attrMap defAttr []

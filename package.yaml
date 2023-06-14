@@ -36,6 +36,9 @@ library:
   source-dirs: src
   dependencies:
     - brick
+    - microlens
+    - microlens-th
+    - text
     - vty
 
 executables:

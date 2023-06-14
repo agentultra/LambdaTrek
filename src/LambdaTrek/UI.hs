@@ -1,25 +1,41 @@
 module LambdaTrek.UI where
 
 import Brick
+import Brick.Forms
 import Brick.Widgets.Center
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
+import LambdaTrek.State
 
-infoPanel :: Widget ()
+data Name = CommandField
+  deriving (Eq, Ord, Show)
+
+infoPanel :: Widget Name
 infoPanel = center (str "Right")
 
-commandPallet :: Widget ()
-commandPallet = vLimit 3 (center (str "Command"))
+commandPallet :: Form GameState e Name -> Widget Name
+commandPallet f = vLimit 3 (center (renderForm f))
 
-simDisplay :: Widget ()
-simDisplay = center (str "Left")
+simDisplay :: Form GameState e Name -> Widget Name
+simDisplay f =
+  let currentCommand = _gameStateCommand . formState $ f
+  in center (str . show $ currentCommand)
 
-ui :: Widget ()
-ui =
+ui :: Form GameState e Name -> Widget Name
+ui f =
     joinBorders $
     withBorderStyle unicode $
     borderWithLabel
     (str "LambdaTrek")
-    (simDisplay
+    (simDisplay f
       <+> vBorder
-      <+> hLimitPercent 30 (infoPanel <=> hBorder <=> commandPallet))
+      <+> hLimitPercent 30 (infoPanel <=> hBorder <=> commandPallet f))
+
+mkForm :: GameState -> Form GameState e Name
+mkForm =
+  let label s w
+        = vLimit 1 $ hLimitPercent 80 $ str s <+> fill ' ' <+> w
+  in newForm
+     [ label "Command: " @@=
+       editTextField gameStateCommandInput CommandField (Just 1)
+     ]
