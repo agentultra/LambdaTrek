@@ -36,6 +36,7 @@ library:
   source-dirs: src
   dependencies:
     - brick
+    - vty
 
 executables:
   lambdatrek:

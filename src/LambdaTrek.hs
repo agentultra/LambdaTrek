@@ -1,7 +1,11 @@
 module LambdaTrek where
 
-import Brick (simpleMain)
-import LambdaTrek.UI
+import Brick (defaultMain)
+import LambdaTrek.App
+import LambdaTrek.State
 
 run :: IO ()
-run = simpleMain ui
+run = do
+  let initialState = GameState "HELLO WORLD"
+  _ <- defaultMain lambdaTrekApp initialState
+  pure ()

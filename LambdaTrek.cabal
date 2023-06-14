@@ -26,8 +26,11 @@ source-repository head
 library
   exposed-modules:
       LambdaTrek
+      LambdaTrek.App
       LambdaTrek.Command
       LambdaTrek.Command.Parse
+      LambdaTrek.Render
+      LambdaTrek.State
       LambdaTrek.UI
       LambdaTrek.Units
   other-modules:
@@ -38,6 +41,7 @@ library
   build-depends:
       base >=4.7 && <5
     , brick
+    , vty
   default-language: Haskell2010
 
 executable lambdatrek
