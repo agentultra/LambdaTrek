@@ -35,9 +35,11 @@ ghc-options:
 library:
   source-dirs: src
   dependencies:
+    - array
     - brick
     - microlens
     - microlens-th
+    - split
     - text
     - vty
 
@@ -62,3 +64,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - LambdaTrek
+    - hspec

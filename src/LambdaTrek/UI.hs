@@ -5,6 +5,8 @@ import Brick.Forms
 import Brick.Widgets.Center
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
+import qualified Data.Text as Text
+import qualified LambdaTrek.Simulation.Sector as Sector
 import LambdaTrek.State
 
 data Name = CommandField
@@ -18,8 +20,8 @@ commandPallet f = vLimit 3 (center (renderForm f))
 
 simDisplay :: Form GameState e Name -> Widget Name
 simDisplay f =
-  let currentCommand = _gameStateCommand . formState $ f
-  in center (str . show $ currentCommand)
+  let sector = _gameStateSector . formState $ f
+  in center (str . Text.unpack . Sector.render $ sector)
 
 ui :: Form GameState e Name -> Widget Name
 ui f =
