@@ -21,7 +21,9 @@ commandPallet f = vLimit 3 (center (renderForm f))
 simDisplay :: Form GameState e Name -> Widget Name
 simDisplay f =
   let sector = _gameStateSector . formState $ f
-  in center (str . Text.unpack . Sector.render $ sector)
+      ship = _gameStateShip . formState $ f
+      sectorTiles = Sector.buildSectorTiles ship sector
+  in center (str . Text.unpack . Sector.render $ sectorTiles)
 
 ui :: Form GameState e Name -> Widget Name
 ui f =
