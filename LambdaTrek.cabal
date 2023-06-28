@@ -30,6 +30,7 @@ library
       LambdaTrek.Command
       LambdaTrek.Command.Parse
       LambdaTrek.Render
+      LambdaTrek.Simulation
       LambdaTrek.Simulation.Sector
       LambdaTrek.Simulation.Ship
       LambdaTrek.Simulation.Tile

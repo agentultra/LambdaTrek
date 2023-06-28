@@ -11,6 +11,7 @@ import Graphics.Vty.Attributes (defAttr)
 import qualified Graphics.Vty as V
 import LambdaTrek.Command.Parse
 import LambdaTrek.Render
+import LambdaTrek.Simulation
 import LambdaTrek.State
 import LambdaTrek.UI
 import Lens.Micro
@@ -32,9 +33,9 @@ lambdaHandleEvent ev = case ev of
   VtyEvent (V.EvKey V.KEnter []) -> do
     s <- gets formState
     let maybeCommand = runCommandParser . T.unpack $ s^.gameStateCommandInput
-    modify $ updateFormState s { _gameStateCommand = maybeCommand
-                               , _gameStateCommandInput = ""
-                               }
+    modify . updateFormState . updateSimulation $ s { _gameStateCommand = maybeCommand
+                                                    , _gameStateCommandInput = ""
+                                                    }
   _ -> handleFormEvent ev
 
 lambdaChooseCursor :: Form GameState e Name -> [CursorLocation Name] -> Maybe (CursorLocation Name)
