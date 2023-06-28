@@ -32,10 +32,23 @@ lambdaHandleEvent ev = case ev of
   VtyEvent (V.EvKey V.KEsc []) -> halt
   VtyEvent (V.EvKey V.KEnter []) -> do
     s <- gets formState
-    let maybeCommand = runCommandParser . T.unpack $ s^.gameStateCommandInput
-    modify . updateFormState . updateSimulation $ s { _gameStateCommand = maybeCommand
-                                                    , _gameStateCommandInput = ""
-                                                    }
+    case runCommandParser . T.unpack $ s^.gameStateCommandInput of
+      Left commandError ->
+        modify
+        . updateFormState
+        . updateSimulation
+        $ s { _gameStateCommandError = Just $ renderCommandParseError commandError
+            , _gameStateCommand = Nothing
+            , _gameStateCommandInput = ""
+            }
+      Right command ->
+        modify
+        . updateFormState
+        . updateSimulation
+        $ s { _gameStateCommand = Just command
+            , _gameStateCommandError = Nothing
+            , _gameStateCommandInput = ""
+            }
   _ -> handleFormEvent ev
 
 lambdaChooseCursor :: Form GameState e Name -> [CursorLocation Name] -> Maybe (CursorLocation Name)

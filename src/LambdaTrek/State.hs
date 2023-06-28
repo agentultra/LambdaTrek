@@ -13,6 +13,7 @@ data GameState
   = GameState
   { _gameStateCommandInput :: Text
   , _gameStateCommand :: Maybe Command
+  , _gameStateCommandError :: Maybe Text
   , _gameStateSector :: Sector
   , _gameStateShip :: Ship
   }
@@ -25,6 +26,7 @@ initialGameState
   = GameState
   { _gameStateCommandInput = ""
   , _gameStateCommand = Nothing
+  , _gameStateCommandError = Nothing
   , _gameStateSector = emptySector
   , _gameStateShip = Ship 2 2
   }

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import LambdaTrek.Command
 import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
@@ -11,10 +13,12 @@ main :: IO ()
 main = hspec $ do
   describe "LambdaTrek.Command.Parse" $ do
     it "should parse MOV command" $ do
-      runCommandParser "MOV 2 2" `shouldBe` (Just $ EngineMove 2 2)
+      runCommandParser "MOV 2 2" `shouldBe` (Right $ EngineMove 2 2)
 
     it "should not parse invalid MOV command" $ do
-      runCommandParser "MOV 100 100" `shouldBe` Nothing
+      runCommandParser "MOV 100 100"
+        `shouldBe`
+        (Left $ InvalidEngineMove "Invalid move: X and Y must be from 0 to 14")
 
   describe "LambdaTrek.Simulation" $ do
     describe "LambdaTrek.Simulation.Sector" $ do

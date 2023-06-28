@@ -1,8 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module LambdaTrek.Command.Parse where
 
-import Control.Monad
 import Data.Char
-import Data.Maybe (listToMaybe)
+import Data.Text (Text)
 import LambdaTrek.Command
 import LambdaTrek.Units
 import Text.ParserCombinators.ReadP
@@ -12,7 +13,7 @@ digit = do
   ds <- munch1 isDigit
   pure $ read ds
 
-parseEngineMove :: ReadP Command
+parseEngineMove :: ReadP (Either CommandParseError Command)
 parseEngineMove = do
   _ <- string "MOV"
   skipSpaces
@@ -20,9 +21,11 @@ parseEngineMove = do
   skipSpaces
   y <- digit
   eof
-  when (x < 0 || x > 14) $ fail "Invalid X"
-  when (y < 0 || y > 14) $ fail "Invalid Y"
-  pure $ EngineMove x y
+  if x < 0 || x > 14 || y < 0 || y > 14
+    then pure
+         . Left
+         $ InvalidEngineMove "Invalid move: X and Y must be from 0 to 14"
+    else pure . Right $ EngineMove x y
 
 parseQuadRefX :: ReadP QuadrantRefX
 parseQuadRefX = do
@@ -52,7 +55,7 @@ parseQuadRefY = do
     'Q' -> pure Q
     _   -> fail $ "Invalid Quadrant Y-Coordinate: " ++ [c]
 
-parseJumpMove :: ReadP Command
+parseJumpMove :: ReadP (Either CommandParseError Command)
 parseJumpMove = do
   _ <- string "JMP"
   skipSpaces
@@ -60,10 +63,25 @@ parseJumpMove = do
   skipSpaces
   y <- parseQuadRefY
   eof
-  pure $ JumpMove (QuadrantCoord x y)
+  pure . Right $ JumpMove (QuadrantCoord x y)
 
-parseCommand :: ReadP Command
+parseCommand :: ReadP (Either CommandParseError Command)
 parseCommand = choice [parseEngineMove, parseJumpMove]
 
-runCommandParser :: String -> Maybe Command
-runCommandParser = fmap fst . listToMaybe . readP_to_S parseCommand
+runCommandParser :: String -> Either CommandParseError Command
+runCommandParser = handleParseResult . readP_to_S parseCommand
+  where
+    handleParseResult
+      :: [(Either CommandParseError Command, String)]
+      -> Either CommandParseError Command
+    handleParseResult [] = Left NoCommand
+    handleParseResult ((result, _):_) = result
+
+data CommandParseError
+  = InvalidEngineMove Text
+  | NoCommand
+  deriving (Eq, Show)
+
+renderCommandParseError :: CommandParseError -> Text
+renderCommandParseError (InvalidEngineMove msg) = msg
+renderCommandParseError NoCommand = "No command"
