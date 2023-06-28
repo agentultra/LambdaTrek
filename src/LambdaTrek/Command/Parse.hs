@@ -1,5 +1,6 @@
 module LambdaTrek.Command.Parse where
 
+import Control.Monad
 import Data.Char
 import Data.Maybe (listToMaybe)
 import LambdaTrek.Command
@@ -19,6 +20,8 @@ parseEngineMove = do
   skipSpaces
   y <- digit
   eof
+  when (x < 0 || x > 14) $ fail "Invalid X"
+  when (y < 0 || y > 14) $ fail "Invalid Y"
   pure $ EngineMove x y
 
 parseQuadRefX :: ReadP QuadrantRefX

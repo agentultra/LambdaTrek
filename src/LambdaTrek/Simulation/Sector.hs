@@ -13,6 +13,7 @@ import qualified LambdaTrek.Simulation.Tile as Tile
 
 data Enemy = Enemy deriving (Eq, Ord, Show)
 
+-- | Sectors are 15x15 tiled regions of space
 data Sector
   = Sector
   { _sectorStars :: [(Int, Int)]

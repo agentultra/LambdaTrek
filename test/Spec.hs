@@ -1,4 +1,5 @@
 import LambdaTrek.Command
+import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
@@ -8,6 +9,13 @@ import Test.Hspec
 
 main :: IO ()
 main = hspec $ do
+  describe "LambdaTrek.Command.Parse" $ do
+    it "should parse MOV command" $ do
+      runCommandParser "MOV 2 2" `shouldBe` (Just $ EngineMove 2 2)
+
+    it "should not parse invalid MOV command" $ do
+      runCommandParser "MOV 100 100" `shouldBe` Nothing
+
   describe "LambdaTrek.Simulation" $ do
     describe "LambdaTrek.Simulation.Sector" $ do
       describe "getTile" $ do
