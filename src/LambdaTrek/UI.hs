@@ -8,6 +8,7 @@ import Brick.Widgets.Border.Style
 import qualified Data.Text as Text
 import qualified LambdaTrek.Simulation.Sector as Sector
 import LambdaTrek.State
+import Lens.Micro
 
 data Name = CommandField
   deriving (Eq, Ord, Show)
@@ -16,7 +17,9 @@ infoPanel :: Widget Name
 infoPanel = center (str "Right")
 
 commandPallet :: Form GameState e Name -> Widget Name
-commandPallet f = vLimit 3 (center (renderForm f))
+commandPallet f =
+  let commandErrorWidget = maybe emptyWidget txtWrap $ formState f^.gameStateCommandError
+  in vLimit 3 (center (commandErrorWidget <=> renderForm f))
 
 simDisplay :: Form GameState e Name -> Widget Name
 simDisplay f =
