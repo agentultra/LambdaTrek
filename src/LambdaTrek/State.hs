@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.State where
@@ -18,3 +19,12 @@ data GameState
   deriving (Eq, Ord, Show)
 
 makeLenses ''GameState
+
+initialGameState :: GameState
+initialGameState
+  = GameState
+  { _gameStateCommandInput = ""
+  , _gameStateCommand = Nothing
+  , _gameStateSector = emptySector
+  , _gameStateShip = Ship 2 2
+  }
