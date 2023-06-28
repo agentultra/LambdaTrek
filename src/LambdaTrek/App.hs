@@ -6,6 +6,7 @@ import Brick.AttrMap
 import Brick.Forms
 import Brick.Main
 import Brick.Types
+import Brick.Util
 import qualified Data.Text as T
 import Graphics.Vty.Attributes (defAttr)
 import qualified Graphics.Vty as V
@@ -58,4 +59,4 @@ lambdaStartEvent :: EventM Name s ()
 lambdaStartEvent = pure ()
 
 lambdaAttrMap :: Form GameState e Name -> AttrMap
-lambdaAttrMap _ = attrMap defAttr []
+lambdaAttrMap _ = attrMap defAttr [(attrName "highlight-error", fg V.red)]

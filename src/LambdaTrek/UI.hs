@@ -18,7 +18,7 @@ infoPanel = center (str "Right")
 
 commandPallet :: Form GameState e Name -> Widget Name
 commandPallet f =
-  let commandErrorWidget = maybe emptyWidget txtWrap $ formState f^.gameStateCommandError
+  let commandErrorWidget = maybe emptyWidget (withAttr (attrName "highlight-error") . txtWrap) $ formState f^.gameStateCommandError
   in vLimit 3 (center (commandErrorWidget <=> renderForm f))
 
 simDisplay :: Form GameState e Name -> Widget Name
