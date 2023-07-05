@@ -1,4 +1,7 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Sector where
 
@@ -10,6 +13,7 @@ import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Tile (Tile (..))
 import qualified LambdaTrek.Simulation.Tile as Tile
+import Lens.Micro.TH
 
 data Enemy = Enemy deriving (Eq, Ord, Show)
 
@@ -20,6 +24,8 @@ data Sector
   , _sectorEnemyShips :: [Enemy]
   }
   deriving (Eq, Ord, Show)
+
+makeFields ''Sector
 
 emptySector :: Sector
 emptySector = Sector [] []
