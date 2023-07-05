@@ -10,7 +10,9 @@ import qualified LambdaTrek.Simulation.Sector as Sector
 import LambdaTrek.State
 import Lens.Micro
 
-data Name = CommandField
+data Name
+  = CommandField
+  | SectorDialog
   deriving (Eq, Ord, Show)
 
 infoPanel :: Widget Name
@@ -21,12 +23,21 @@ commandPallet f =
   let commandErrorWidget = maybe emptyWidget (withAttr (attrName "highlight-error") . txtWrap) $ formState f^.gameStateCommandError
   in vLimit 3 (center (commandErrorWidget <=> renderForm f))
 
-simDisplay :: Form GameState e Name -> Widget Name
-simDisplay f =
-  let sector = _gameStateSector . formState $ f
-      ship = _gameStateShip . formState $ f
+-- TODO: figure out why vLimit isn't actually working..
+sectorDialog :: Widget Name
+sectorDialog = withVScrollBars OnRight $ viewport SectorDialog Vertical $ str ""
+
+sectorDisplay :: GameState -> Widget Name
+sectorDisplay gameState =
+  let sector = gameState^.gameStateSector
+      ship = gameState^.gameStateShip
       sectorTiles = Sector.buildSectorTiles ship sector
-  in center (str . Text.unpack . Sector.render $ sectorTiles)
+  in center ((str . Text.unpack . Sector.render $ sectorTiles)
+             <=> hBorder
+             <=> vLimit 5 sectorDialog)
+
+simDisplay :: Form GameState e Name -> Widget Name
+simDisplay f = sectorDisplay $ formState f
 
 ui :: Form GameState e Name -> Widget Name
 ui f =
