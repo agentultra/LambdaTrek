@@ -6,6 +6,7 @@
 module LambdaTrek.Simulation.Sector where
 
 import Data.Array
+import Data.List (foldl')
 import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -13,6 +14,7 @@ import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Tile (Tile (..))
 import qualified LambdaTrek.Simulation.Tile as Tile
+import Lens.Micro
 import Lens.Micro.TH
 
 data Enemy = Enemy deriving (Eq, Ord, Show)
@@ -57,8 +59,13 @@ unsafeSetTile x y tile sectorTiles =
   in SectorTiles $ sectorData // [((y * 15) + x, fromEnum tile)]
 
 buildSectorTiles :: Ship -> Sector -> SectorTiles
-buildSectorTiles ship _ =
-  unsafeSetTile (Ship._shipX ship) (Ship._shipY ship) PlayerShip emptySectorTiles
+buildSectorTiles ship sector =
+  let starterTiles = unsafeSetTile (Ship._shipX ship) (Ship._shipY ship) PlayerShip emptySectorTiles
+  in foldl' addStar starterTiles $ sector^.stars
+  where
+    addStar :: SectorTiles -> (Int, Int) -> SectorTiles
+    addStar tiles (x, y) =
+      unsafeSetTile x y Star tiles
 
 render :: SectorTiles -> Text
 render sector =

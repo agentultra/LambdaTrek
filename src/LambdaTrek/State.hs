@@ -7,6 +7,7 @@ import Data.Text (Text)
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
+import Lens.Micro
 import Lens.Micro.TH
 
 data GameState
@@ -27,6 +28,6 @@ initialGameState
   { _gameStateCommandInput = ""
   , _gameStateCommand = Nothing
   , _gameStateCommandError = Nothing
-  , _gameStateSector = emptySector
+  , _gameStateSector = emptySector & stars .~ [(10, 10)]
   , _gameStateShip = Ship 2 2
   }
