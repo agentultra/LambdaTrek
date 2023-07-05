@@ -59,4 +59,7 @@ lambdaStartEvent :: EventM Name s ()
 lambdaStartEvent = pure ()
 
 lambdaAttrMap :: Form GameState e Name -> AttrMap
-lambdaAttrMap _ = attrMap defAttr [(attrName "highlight-error", fg V.red)]
+lambdaAttrMap _ = attrMap defAttr
+  [ (attrName "highlight-error", fg V.red)
+  , (attrName "highlight-helm", fg V.yellow)
+  ]

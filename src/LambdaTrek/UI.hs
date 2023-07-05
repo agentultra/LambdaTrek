@@ -1,3 +1,6 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module LambdaTrek.UI where
 
 import Brick
@@ -5,7 +8,9 @@ import Brick.Forms
 import Brick.Widgets.Center
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
+import Data.List (foldl')
 import qualified Data.Text as Text
+import LambdaTrek.Simulation.Dialog
 import qualified LambdaTrek.Simulation.Sector as Sector
 import LambdaTrek.State
 import Lens.Micro
@@ -23,18 +28,31 @@ commandPallet f =
   let commandErrorWidget = maybe emptyWidget (withAttr (attrName "highlight-error") . txtWrap) $ formState f^.gameStateCommandError
   in vLimit 3 (center (commandErrorWidget <=> renderForm f))
 
+dialog :: Dialog -> Widget Name
+dialog (Dialog crewmate msg) =
+  str "> " <+> (padRight (Pad 0) . withAttr (attrName (fromCrew crewmate)) . txtWrap . crewmateTxt $ crewmate) <+> txtWrap msg
+  where
+    fromCrew = \case
+      Helm -> "highlight-helm"
+
+    crewmateTxt = \case
+      Helm -> "HELM: "
+
 -- TODO: figure out why vLimit isn't actually working..
-sectorDialog :: Widget Name
-sectorDialog = withVScrollBars OnRight $ viewport SectorDialog Vertical $ str ""
+sectorDialog :: GameState -> Widget Name
+sectorDialog gameState = withVScrollBars OnRight . viewport SectorDialog Vertical . combineDialogs $ gameState^.gameStateDialog
+  where
+    combineDialogs :: [Dialog] -> Widget Name
+    combineDialogs = foldl' (<=>) emptyWidget . map dialog
 
 sectorDisplay :: GameState -> Widget Name
 sectorDisplay gameState =
   let sector = gameState^.gameStateSector
       ship = gameState^.gameStateShip
       sectorTiles = Sector.buildSectorTiles ship sector
-  in center ((str . Text.unpack . Sector.render $ sectorTiles)
-             <=> hBorder
-             <=> vLimit 5 sectorDialog)
+  in (center . str . Text.unpack . Sector.render $ sectorTiles)
+       <=> hBorder
+       <=> vLimit 5 (sectorDialog gameState)
 
 simDisplay :: Form GameState e Name -> Widget Name
 simDisplay f = sectorDisplay $ formState f
