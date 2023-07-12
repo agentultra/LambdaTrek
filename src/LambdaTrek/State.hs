@@ -32,11 +32,10 @@ initialGameState
   , _gameStateCommandError = Nothing
   , _gameStateSector = emptySector & stars .~ [(10, 10)]
   , _gameStateShip = Ship 2 2
-  , _gameStateDialog = [ Dialog Helm "WOO HOOOOOO!!!"
-                       , Dialog Helm "WOO HOO1OOO!!!"
-                       , Dialog Helm "WOO HOOelevenOOO!!!"
-                       , Dialog Helm "WOO FO!!!"
-                       , Dialog Helm "WOO SHOW!!!"
-                       , Dialog Helm "WOO!!!"
-                       ]
+  , _gameStateDialog = []
   }
+
+addDialog :: GameState -> Crewmate -> Text -> GameState
+addDialog gameState crewmate msg =
+  let dialog = Dialog crewmate msg
+  in gameState & gameStateDialog %~ (:) dialog

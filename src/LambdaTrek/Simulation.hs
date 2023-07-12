@@ -1,8 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module LambdaTrek.Simulation where
 
+import qualified Data.Text as Text
 import LambdaTrek.Command
+import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
 import LambdaTrek.State
@@ -23,9 +26,17 @@ handleEngineMove :: GameState -> Int -> Int -> GameState
 handleEngineMove gameState x y =
   let stars_ = gameState^.(gameStateSector . stars)
       enemies = gameState^.(gameStateSector . enemyShips)
-  in if collidesWithStars stars_ x y || collidesWithEnemies enemies x y
-     then gameState
-     else gameState & gameStateShip .~ Ship x y
+  in if collidesWithStars stars_ x y
+     then addDialog gameState Helm
+          ( "Captain, that would take us directly into the star at ("
+            <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+          )
+     else if collidesWithEnemies enemies x y
+          then addDialog gameState Helm
+               ( "Captain, would collide directly with the enemy ship at ("
+                 <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+               )
+          else gameState & gameStateShip .~ Ship x y
   where
     collidesWithStars :: [(Int, Int)] -> Int -> Int -> Bool
     collidesWithStars ss x' y' = (x', y') `elem` ss
