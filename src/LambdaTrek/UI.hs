@@ -10,6 +10,8 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Data.List (foldl')
 import qualified Data.Text as Text
+import qualified Graphics.Vty.Attributes as Vty
+import qualified Graphics.Vty.Image as Vty
 import LambdaTrek.Simulation.Dialog
 import qualified LambdaTrek.Simulation.Sector as Sector
 import LambdaTrek.State
@@ -30,11 +32,13 @@ commandPallet f =
 
 dialog :: Dialog -> Widget Name
 dialog (Dialog crewmate msg) =
-  str "> " <+> (padRight (Pad 0) . withAttr (attrName (fromCrew crewmate)) . txtWrap . crewmateTxt $ crewmate) <+> txtWrap msg
+  let dialogStr = Vty.string (fromCrewmate crewmate) (crewmateTxt crewmate)
+        Vty.<|> Vty.string Vty.defAttr (Text.unpack msg)
+  in raw dialogStr
   where
-    fromCrew = \case
-      Helm -> "highlight-helm"
-
+    fromCrewmate :: Crewmate -> Vty.Attr
+    fromCrewmate = \case
+      Helm -> Vty.defAttr `Vty.withForeColor` Vty.yellow
     crewmateTxt = \case
       Helm -> "HELM: "
 
