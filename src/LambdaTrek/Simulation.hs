@@ -3,9 +3,11 @@
 
 module LambdaTrek.Simulation where
 
+import qualified Data.List as List
 import qualified Data.Text as Text
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Dialog
+import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
 import LambdaTrek.State
@@ -33,7 +35,7 @@ handleEngineMove gameState x y =
           )
      else if collidesWithEnemies enemies x y
           then addDialog gameState Helm
-               ( "Captain, would collide directly with the enemy ship at ("
+               ( "Captain, we would collide directly with the enemy ship at ("
                  <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
                )
           else gameState & gameStateShip .~ Ship x y
@@ -42,4 +44,10 @@ handleEngineMove gameState x y =
     collidesWithStars ss x' y' = (x', y') `elem` ss
 
     collidesWithEnemies :: [Enemy] -> Int -> Int -> Bool
-    collidesWithEnemies _ _ _ = False
+    collidesWithEnemies enemies x' y' = case List.find (collidesWithEnemy x' y') enemies of
+      Nothing -> False
+      Just _ -> True
+
+    collidesWithEnemy :: Int -> Int -> Enemy -> Bool
+    collidesWithEnemy x' y' enemy =
+      enemy^.positionX == x' && enemy^.positionY == y'

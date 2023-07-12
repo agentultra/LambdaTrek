@@ -7,6 +7,7 @@ import Data.Text (Text)
 
 data Tile
   = PlayerShip
+  | EnemyShip
   | EmptySpace
   | Star
   deriving (Bounded, Enum, Eq, Show)
@@ -14,5 +15,6 @@ data Tile
 render :: Tile -> Text
 render = \case
   PlayerShip -> "S"
+  EnemyShip -> "<"
   EmptySpace -> "."
   Star -> "*"

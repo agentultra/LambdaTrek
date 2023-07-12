@@ -10,6 +10,7 @@ import Data.List (foldl')
 import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as Text
+import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Tile (Tile (..))
@@ -17,20 +18,18 @@ import qualified LambdaTrek.Simulation.Tile as Tile
 import Lens.Micro
 import Lens.Micro.TH
 
-data Enemy = Enemy deriving (Eq, Ord, Show)
-
 -- | Sectors are 15x15 tiled regions of space
 data Sector
   = Sector
-  { _sectorStars :: [(Int, Int)]
-  , _sectorEnemyShips :: [Enemy]
+  { sectorStars :: [(Int, Int)]
+  , sectorEnemyShips :: [Enemy]
   }
   deriving (Eq, Ord, Show)
 
 makeFields ''Sector
 
 emptySector :: Sector
-emptySector = Sector [] []
+emptySector = Sector [] [Enemy 8 3]
 
 newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
   deriving (Eq, Ord, Show)
@@ -61,11 +60,16 @@ unsafeSetTile x y tile sectorTiles =
 buildSectorTiles :: Ship -> Sector -> SectorTiles
 buildSectorTiles ship sector =
   let starterTiles = unsafeSetTile (Ship._shipX ship) (Ship._shipY ship) PlayerShip emptySectorTiles
-  in foldl' addStar starterTiles $ sector^.stars
+      starTiles = foldl' addStar starterTiles $ sector^.stars
+  in foldl' addEnemy starTiles $ sector^.enemyShips
   where
     addStar :: SectorTiles -> (Int, Int) -> SectorTiles
     addStar tiles (x, y) =
       unsafeSetTile x y Star tiles
+
+    addEnemy :: SectorTiles -> Enemy -> SectorTiles
+    addEnemy tiles enemy =
+      unsafeSetTile (enemy^.positionX) (enemy^.positionY) EnemyShip tiles
 
 render :: SectorTiles -> Text
 render sector =
