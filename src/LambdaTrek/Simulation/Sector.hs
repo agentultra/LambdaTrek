@@ -59,7 +59,7 @@ unsafeSetTile x y tile sectorTiles =
 
 buildSectorTiles :: Ship -> Sector -> SectorTiles
 buildSectorTiles ship sector =
-  let starterTiles = unsafeSetTile (Ship._shipX ship) (Ship._shipY ship) PlayerShip emptySectorTiles
+  let starterTiles = unsafeSetTile (ship^.Ship.positionX) (ship^.Ship.positionY) PlayerShip emptySectorTiles
       starTiles = foldl' addStar starterTiles $ sector^.stars
   in foldl' addEnemy starTiles $ sector^.enemyShips
   where

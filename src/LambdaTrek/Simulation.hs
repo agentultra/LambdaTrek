@@ -7,9 +7,10 @@ import qualified Data.List as List
 import qualified Data.Text as Text
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Dialog
-import LambdaTrek.Simulation.Enemy
+import LambdaTrek.Simulation.Enemy (Enemy)
+import qualified LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Sector
-import LambdaTrek.Simulation.Ship
+import LambdaTrek.Simulation.Ship (Ship (..))
 import LambdaTrek.State
 import Lens.Micro
 
@@ -50,4 +51,4 @@ handleEngineMove gameState x y =
 
     collidesWithEnemy :: Int -> Int -> Enemy -> Bool
     collidesWithEnemy x' y' enemy =
-      enemy^.positionX == x' && enemy^.positionY == y'
+      enemy^.Enemy.positionX == x' && enemy^.Enemy.positionY == y'

@@ -1,8 +1,16 @@
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module LambdaTrek.Simulation.Ship where
+
+import Lens.Micro.TH
 
 data Ship
   = Ship
-  { _shipX :: Int
-  , _shipY :: Int
+  { shipPositionX :: Int
+  , shipPositionY :: Int
   }
   deriving (Eq, Ord, Show)
+
+makeFields ''Ship
