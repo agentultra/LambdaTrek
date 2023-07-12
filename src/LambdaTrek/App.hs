@@ -33,7 +33,7 @@ lambdaHandleEvent ev = case ev of
   VtyEvent (V.EvKey V.KEsc []) -> halt
   VtyEvent (V.EvKey V.KEnter []) -> do
     s <- gets formState
-    case runCommandParser . T.unpack $ s^.gameStateCommandInput of
+    case runCommandParser . T.unpack . T.toUpper $ s^.gameStateCommandInput of
       Left commandError ->
         modify
         . updateFormState
