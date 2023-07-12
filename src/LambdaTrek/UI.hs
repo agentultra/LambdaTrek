@@ -8,12 +8,14 @@ import Brick.Forms
 import Brick.Widgets.Center
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
+import Brick.Widgets.Table
 import Data.List (foldl')
 import qualified Data.Text as Text
 import qualified Graphics.Vty.Attributes as Vty
 import qualified Graphics.Vty.Image as Vty
 import LambdaTrek.Simulation.Dialog
 import qualified LambdaTrek.Simulation.Sector as Sector
+import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
 import Lens.Micro
 
@@ -22,8 +24,10 @@ data Name
   | SectorDialog
   deriving (Eq, Ord, Show)
 
-infoPanel :: Widget Name
-infoPanel = center (str "Right")
+infoPanel :: Form GameState e Name -> Widget Name
+infoPanel f =
+  let gameState = formState f
+  in center . renderTable $ table [[str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]]
 
 commandPallet :: Form GameState e Name -> Widget Name
 commandPallet f =
@@ -69,7 +73,7 @@ ui f =
     (str "LambdaTrek")
     (simDisplay f
       <+> vBorder
-      <+> hLimitPercent 30 (infoPanel <=> hBorder <=> commandPallet f))
+      <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f))
 
 mkForm :: GameState -> Form GameState e Name
 mkForm =

@@ -11,6 +11,7 @@ import LambdaTrek.Simulation.Enemy (Enemy)
 import qualified LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship (Ship (..))
+import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
 import Lens.Micro
 
@@ -39,7 +40,7 @@ handleEngineMove gameState x y =
                ( "Captain, we would collide directly with the enemy ship at ("
                  <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
                )
-          else gameState & gameStateShip .~ Ship x y
+          else gameState & gameStateShip .~ Ship x y (gameState^.gameStateShip.Ship.energy)
   where
     collidesWithStars :: [(Int, Int)] -> Int -> Int -> Bool
     collidesWithStars ss x' y' = (x', y') `elem` ss

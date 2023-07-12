@@ -10,6 +10,7 @@ data Ship
   = Ship
   { shipPositionX :: Int
   , shipPositionY :: Int
+  , shipEnergy    :: Int
   }
   deriving (Eq, Ord, Show)
 

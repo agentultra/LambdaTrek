@@ -31,7 +31,7 @@ initialGameState
   , _gameStateCommand = Nothing
   , _gameStateCommandError = Nothing
   , _gameStateSector = emptySector & stars .~ [(10, 10)]
-  , _gameStateShip = Ship 2 2
+  , _gameStateShip = Ship 2 2 100
   , _gameStateDialog = []
   }
 
