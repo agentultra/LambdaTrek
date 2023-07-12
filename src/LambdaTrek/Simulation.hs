@@ -40,7 +40,7 @@ handleEngineMove gameState x y =
                ( "Captain, we would collide directly with the enemy ship at ("
                  <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
                )
-          else gameState & gameStateShip .~ Ship x y (gameState^.gameStateShip.Ship.energy)
+          else gameState & gameStateShip .~ Ship x y (gameState^.gameStateShip.Ship.energy - 2)
   where
     collidesWithStars :: [(Int, Int)] -> Int -> Int -> Bool
     collidesWithStars ss x' y' = (x', y') `elem` ss
