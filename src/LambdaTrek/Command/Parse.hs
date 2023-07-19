@@ -1,8 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{-
+Module: LambdaTrek.Command.Parse
+
+Commands are UPPERCASED before being passed to 'runCommandParser'
+-}
 module LambdaTrek.Command.Parse where
 
 import Data.Char
+import Data.Functor
 import Data.Text (Text)
 import LambdaTrek.Command
 import LambdaTrek.Units
@@ -65,8 +71,23 @@ parseJumpMove = do
   eof
   pure . Right $ JumpMove (QuadrantCoord x y)
 
+parsePhaserManual :: ReadP PhaserMode
+parsePhaserManual = string "MANUAL" $> PhaserManual
+
+-- phasers 23
+-- phasers 23 manual
+parseFirePhasers :: ReadP (Either CommandParseError Command)
+parseFirePhasers = do
+  _ <- string "PHASERS"
+  skipSpaces
+  amt <- digit
+  skipSpaces
+  fireMode <- option PhaserAutomatic parsePhaserManual
+  eof
+  pure . Right $ FirePhasers amt fireMode
+
 parseCommand :: ReadP (Either CommandParseError Command)
-parseCommand = choice [parseEngineMove, parseJumpMove]
+parseCommand = choice [parseEngineMove, parseJumpMove, parseFirePhasers]
 
 runCommandParser :: String -> Either CommandParseError Command
 runCommandParser = handleParseResult . readP_to_S parseCommand

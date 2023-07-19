@@ -22,14 +22,14 @@ import Lens.Micro.TH
 data Sector
   = Sector
   { sectorStars :: [(Int, Int)]
-  , sectorEnemyShips :: [Enemy]
+  , sectorEnemyShips :: Array Int Enemy
   }
   deriving (Eq, Ord, Show)
 
 makeFields ''Sector
 
 emptySector :: Sector
-emptySector = Sector [] [Enemy 8 3]
+emptySector = Sector [] $ listArray (0,0) [Enemy 8 3 20]
 
 newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
   deriving (Eq, Ord, Show)
