@@ -38,7 +38,9 @@ library:
     - array
     - brick
     - microlens
+    - microlens-mtl
     - microlens-th
+    - mtl
     - split
     - text
     - vty
@@ -63,5 +65,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - array
     - LambdaTrek
     - hspec

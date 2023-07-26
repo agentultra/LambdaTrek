@@ -31,6 +31,7 @@ library
       LambdaTrek.Command.Parse
       LambdaTrek.Render
       LambdaTrek.Simulation
+      LambdaTrek.Simulation.Combat
       LambdaTrek.Simulation.Dialog
       LambdaTrek.Simulation.Enemy
       LambdaTrek.Simulation.Sector
@@ -49,7 +50,9 @@ library
     , base >=4.7 && <5
     , brick
     , microlens
+    , microlens-mtl
     , microlens-th
+    , mtl
     , split
     , text
     , vty
@@ -77,6 +80,7 @@ test-suite LambdaTrek-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       LambdaTrek
+    , array
     , base >=4.7 && <5
     , hspec
   default-language: Haskell2010

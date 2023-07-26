@@ -1,8 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import qualified Data.Array as Array
 import LambdaTrek.Command
 import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
+import LambdaTrek.Simulation.Combat
+import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
 import LambdaTrek.Simulation.Tile
@@ -40,11 +43,33 @@ main = hspec $ do
         it "should move the ship to the empty space" $ do
           let stateWithValidMoveCommand
                 = initialGameState
-                { _gameStateCommand = Just $ EngineMove 10 10
+                { _gameStateCommand = Just $ EngineMove 8 10
                 }
               expectedState
                 = initialGameState
                 { _gameStateCommand = Nothing
-                , _gameStateShip = Ship 10 10
+                , _gameStateShip = Ship 8 10 98 6
                 }
           updateSimulation stateWithValidMoveCommand `shouldBe` expectedState
+
+  describe "LambdaTrek.Simulation.Combat" $ do
+    describe "enemyInRange" $ do
+      let exampleEnemy = Enemy 1 1 1
+      it "should return True of the enemy is in range" $ do
+        enemyInRange (0, 0) (3, 3) exampleEnemy `shouldBe` True
+
+      it "should return False if the enemy is out of range" $ do
+        enemyInRange (8, 8) (8, 8) exampleEnemy `shouldBe` False
+
+    describe "enemiesInRange" $ do
+      let exampleEnemies = Array.listArray (0, 1)
+            [ Enemy 1 1 1
+            , Enemy 4 4 1
+            ]
+      it "should return all enemies in the range" $
+        enemiesInRange (0, 0) (8, 8) exampleEnemies
+        `shouldBe`
+        [(0, Enemy 1 1 1), (1, Enemy 4 4 1)]
+
+      it "should return some enemies in the range" $
+        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1)]
