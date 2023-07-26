@@ -9,10 +9,3 @@ data Crewmate
 
 data Dialog = Dialog Crewmate Text
   deriving (Eq, Ord, Show)
-
-sayDialog
-  :: Crewmate
-  -> Text
-  -> [Dialog]
-  -> [Dialog]
-sayDialog crewMate say dialog = Dialog crewMate say : dialog

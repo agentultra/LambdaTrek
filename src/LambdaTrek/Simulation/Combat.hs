@@ -31,7 +31,7 @@ handleFirePhasers energyAmt firingMode = do
         gameStateShip %= Ship.subtractEnergy (damageAmount * length damagedEnemies)
         gameStateSector . enemyShips %= \ships -> ships Array.// damagedEnemies
         forM_ damagedEnemies $ \(_, damagedEnemy) ->
-          gameStateDialog %= sayDialog Combat (generateDamageDialog damageAmount damagedEnemy)
+          sayDialog Combat (generateDamageDialog damageAmount damagedEnemy)
       PhaserManual -> pure ()
 
 getEnemiesInPhaserRange :: State GameState [(Int, Enemy)]
