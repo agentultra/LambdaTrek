@@ -43,8 +43,10 @@ dialog (Dialog crewmate msg) =
     fromCrewmate :: Crewmate -> Vty.Attr
     fromCrewmate = \case
       Helm -> Vty.defAttr `Vty.withForeColor` Vty.yellow
+      Combat -> Vty.defAttr `Vty.withForeColor` Vty.red
     crewmateTxt = \case
       Helm -> "HELM: "
+      Combat -> "COMBAT: "
 
 -- TODO: figure out why vLimit isn't actually working..
 sectorDialog :: GameState -> Widget Name
