@@ -29,17 +29,40 @@ handleFirePhasers energyAmt firingMode = do
         let energyAmount = energyAmt `div` length enemies
         damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
         gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
-        gameStateSector . enemyShips %= \ships -> ships Array.// damagedEnemies
-        forM_ damagedEnemies $ \(_, damagedEnemy) ->
-          sayDialog Combat (generateDamageDialog energyAmount damagedEnemy)
+        gameStateSector . enemyShips %= \ships ->
+          ships Array.// map resultToEnemyIx damagedEnemies
+        forM_ damagedEnemies $ \PhaserDamageResult {..} ->
+          sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
       PhaserManual -> pure ()
 
-calculateEnemyPhaserDamage :: Int -> (Int, Enemy) -> State GameState (Int, Enemy)
+data PhaserDamageResult
+  = PhaserDamageResult
+  { _phaserDamageReportHitPointDamage :: Int
+  , _phaserDamageReportShieldValueDamage :: Int
+  , _phaserDamageReportEnemyIdx :: Int
+  , _phaserDamageReportEnemy :: Enemy
+  }
+
+resultToEnemyIx :: PhaserDamageResult -> (Int, Enemy)
+resultToEnemyIx PhaserDamageResult {..} =
+  (_phaserDamageReportEnemyIdx, _phaserDamageReportEnemy)
+
+calculateEnemyPhaserDamage
+  :: Int
+  -> (Int, Enemy)
+  -> State GameState PhaserDamageResult
 calculateEnemyPhaserDamage amt (idx, enemy) = do
   factor <- randomPhaserFactor
   let dmgAmount = ceiling (fromIntegral amt * factor) - enemy^.Enemy.shieldValue
       shieldDmg = 2 -- TODO (james): figure out a good formula
-  pure (idx, Enemy.applyDamageToShields shieldDmg . Enemy.applyDamage dmgAmount $ enemy)
+  pure $ PhaserDamageResult
+    { _phaserDamageReportHitPointDamage = dmgAmount
+    , _phaserDamageReportShieldValueDamage = shieldDmg
+    , _phaserDamageReportEnemyIdx = idx
+    , _phaserDamageReportEnemy = Enemy.applyDamageToShields shieldDmg
+                               . Enemy.applyDamage dmgAmount
+                               $ enemy
+    }
 
 getEnemiesInPhaserRange :: State GameState [(Int, Enemy)]
 getEnemiesInPhaserRange = do
@@ -74,6 +97,6 @@ generateDamageDialog amt Enemy {..}
 randomPhaserFactor :: State GameState Float
 randomPhaserFactor = do
   gen <- use gameStateRandomGen
-  let (f, gen') = randomR (-0.9, 1.1) gen
+  let (f, gen') = randomR (0.9, 1.1) gen
   gameStateRandomGen .= gen'
   pure f
