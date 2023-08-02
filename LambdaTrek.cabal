@@ -84,5 +84,7 @@ test-suite LambdaTrek-test
     , array
     , base >=4.7 && <5
     , hspec
+    , microlens
+    , mtl
     , random
   default-language: Haskell2010

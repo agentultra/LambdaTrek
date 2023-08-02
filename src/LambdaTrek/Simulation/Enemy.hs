@@ -1,5 +1,4 @@
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Enemy where
@@ -17,5 +16,5 @@ data Enemy
 
 makeFields ''Enemy
 
-damageEnemy :: Int -> Enemy -> Enemy
-damageEnemy amt enemy = enemy & hitPoints %~ \oldAmt -> oldAmt - amt
+applyDamage :: Int -> Enemy -> Enemy
+applyDamage dmg enemy = enemy & hitPoints %~ \hp -> hp - dmg

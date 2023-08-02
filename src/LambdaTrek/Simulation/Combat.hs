@@ -6,7 +6,6 @@ module LambdaTrek.Simulation.Combat where
 import Control.Monad.State
 import Data.Array
 import qualified Data.Array as Array
-import Data.Bifunctor
 import Data.Text (Text)
 import qualified Data.Text as T
 import LambdaTrek.Command
@@ -19,6 +18,7 @@ import LambdaTrek.Simulation.Ship (Ship (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
 import Lens.Micro
 import Lens.Micro.Mtl
+import System.Random
 
 handleFirePhasers :: Int -> PhaserMode -> State GameState ()
 handleFirePhasers energyAmt firingMode = do
@@ -26,13 +26,18 @@ handleFirePhasers energyAmt firingMode = do
   unless (null enemies) $
     case firingMode of
       PhaserAutomatic -> do
-        let damageAmount = energyAmt `div` length enemies
-            damagedEnemies = map (second $ Enemy.damageEnemy damageAmount) enemies
-        gameStateShip %= Ship.subtractEnergy (damageAmount * length damagedEnemies)
+        let energyAmount = energyAmt `div` length enemies
+        damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
+        gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
         gameStateSector . enemyShips %= \ships -> ships Array.// damagedEnemies
         forM_ damagedEnemies $ \(_, damagedEnemy) ->
-          sayDialog Combat (generateDamageDialog damageAmount damagedEnemy)
+          sayDialog Combat (generateDamageDialog energyAmount damagedEnemy)
       PhaserManual -> pure ()
+
+calculateEnemyPhaserDamage :: Int -> (Int, Enemy) -> State GameState (Int, Enemy)
+calculateEnemyPhaserDamage amt (idx, enemy) = do
+  factor <- randomPhaserFactor
+  pure (idx, Enemy.applyDamage (ceiling $ fromIntegral amt * factor) enemy)
 
 getEnemiesInPhaserRange :: State GameState [(Int, Enemy)]
 getEnemiesInPhaserRange = do
@@ -63,3 +68,10 @@ generateDamageDialog amt Enemy {..}
   <> (T.pack . show $ enemyPositionY)
   <> ") for "
   <> (T.pack . show $ amt)
+
+randomPhaserFactor :: State GameState Float
+randomPhaserFactor = do
+  gen <- use gameStateRandomGen
+  let (f, gen') = randomR (-0.9, 1.1) gen
+  gameStateRandomGen .= gen'
+  pure f

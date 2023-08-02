@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import Control.Monad.State
 import qualified Data.Array as Array
+import Data.Functor.Identity
 import LambdaTrek.Command
 import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
@@ -12,6 +14,7 @@ import LambdaTrek.Simulation.Tile
 import LambdaTrek.State
 import Test.Hspec
 import System.Random
+import Lens.Micro
 
 main :: IO ()
 main = hspec $ do
@@ -76,3 +79,26 @@ main = hspec $ do
 
       it "should return some enemies in the range" $
         enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1)]
+
+    describe "calculateEnemyPhaserDamage" $ do
+      let initState = initialGameState (mkStdGen 0)
+
+      -- The `amt` parameter to 'calculateEnemyPhaserDamage' is a
+      -- positive integer > 0 as defined by the PHASER command from
+      -- the user and is restricted by the parser.
+      -- TODO: consider making this clearer with a newtype
+
+      it "should apply some damage" $ do
+        let e = Enemy
+                { enemyPositionX = 0
+                , enemyPositionY = 0
+                , enemyHitPoints = 10
+                }
+            Identity (_, damagedEnemy) = (`evalStateT` initState) $
+              calculateEnemyPhaserDamage 5 (0, e)
+        damagedEnemy `shouldSatisfy` damageIsApplied e
+        where
+          damageIsApplied enemy damagedEnemy =
+            case compare (damagedEnemy^.hitPoints) (enemy^.hitPoints) of
+              LT -> True
+              _  -> False

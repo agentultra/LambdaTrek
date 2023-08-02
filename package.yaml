@@ -69,4 +69,6 @@ tests:
     - array
     - LambdaTrek
     - hspec
+    - microlens
+    - mtl
     - random
