@@ -37,7 +37,9 @@ handleFirePhasers energyAmt firingMode = do
 calculateEnemyPhaserDamage :: Int -> (Int, Enemy) -> State GameState (Int, Enemy)
 calculateEnemyPhaserDamage amt (idx, enemy) = do
   factor <- randomPhaserFactor
-  pure (idx, Enemy.applyDamage (ceiling $ fromIntegral amt * factor) enemy)
+  let dmgAmount = ceiling (fromIntegral amt * factor) - enemy^.Enemy.shieldValue
+      shieldDmg = 2 -- TODO (james): figure out a good formula
+  pure (idx, Enemy.applyDamageToShields shieldDmg . Enemy.applyDamage dmgAmount $ enemy)
 
 getEnemiesInPhaserRange :: State GameState [(Int, Enemy)]
 getEnemiesInPhaserRange = do

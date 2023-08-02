@@ -19,3 +19,6 @@ makeFields ''Enemy
 
 applyDamage :: Int -> Enemy -> Enemy
 applyDamage dmg enemy = enemy & hitPoints %~ \hp -> hp - dmg
+
+applyDamageToShields :: Int -> Enemy -> Enemy
+applyDamageToShields dmg enemy = enemy & shieldValue %~ \sv -> sv - dmg

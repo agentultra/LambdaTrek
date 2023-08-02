@@ -88,17 +88,63 @@ main = hspec $ do
       -- the user and is restricted by the parser.
       -- TODO: consider making this clearer with a newtype
 
-      it "should apply some damage" $ do
-        let e = Enemy
-                { enemyPositionX = 0
-                , enemyPositionY = 0
-                , enemyHitPoints = 10
-                }
-            Identity (_, damagedEnemy) = (`evalStateT` initState) $
-              calculateEnemyPhaserDamage 5 (0, e)
-        damagedEnemy `shouldSatisfy` damageIsApplied e
-        where
-          damageIsApplied enemy damagedEnemy =
-            case compare (damagedEnemy^.hitPoints) (enemy^.hitPoints) of
-              LT -> True
-              _  -> False
+      context "When the enemy shields are down" $ do
+        it "should apply some damage" $ do
+          let e = Enemy
+                  { enemyPositionX = 0
+                  , enemyPositionY = 0
+                  , enemyHitPoints = 10
+                  , enemyShieldValue = 0
+                  }
+              Identity (_, damagedEnemy) = (`evalStateT` initState) $
+                calculateEnemyPhaserDamage 5 (0, e)
+              damageIsApplied enemy damagedE =
+                case compare (damagedE^.hitPoints) (enemy^.hitPoints) of
+                  LT -> True
+                  _  -> False
+          damagedEnemy `shouldSatisfy` damageIsApplied e
+
+      context "When the enemy shields are up" $ do
+        it "should prevent some damage" $ do
+          let e1 = Enemy
+                  { enemyPositionX = 0
+                  , enemyPositionY = 0
+                  , enemyHitPoints = 10
+                  , enemyShieldValue = 0
+                  }
+              e2 = Enemy
+                  { enemyPositionX = 0
+                  , enemyPositionY = 0
+                  , enemyHitPoints = 10
+                  , enemyShieldValue = 8
+                  }
+
+              Identity (_, damagedE1) = (`evalStateT` initState) $
+                calculateEnemyPhaserDamage 5 (0, e1)
+              Identity (_, damagedE2) = (`evalStateT` initState) $
+                calculateEnemyPhaserDamage 5 (0, e2)
+
+              shieldsReducedDamage (enemy1, enemy2) =
+                case compare (enemy1^.hitPoints) (enemy2^.hitPoints) of
+                  LT -> True
+                  _  -> False
+
+          (damagedE1, damagedE2) `shouldSatisfy` shieldsReducedDamage
+
+        it "should reduce the shields" $ do
+          let e = Enemy
+                  { enemyPositionX = 0
+                  , enemyPositionY = 0
+                  , enemyHitPoints = 10
+                  , enemyShieldValue = 10
+                  }
+
+              Identity (_, damagedEnemy) = (`evalStateT` initState) $
+                calculateEnemyPhaserDamage 5 (0, e)
+
+              shieldsReduced enemy damagedE =
+                case compare (enemy^.shieldValue) (damagedE^.shieldValue) of
+                  GT -> True
+                  _  -> False
+
+          damagedEnemy `shouldSatisfy` shieldsReduced e
