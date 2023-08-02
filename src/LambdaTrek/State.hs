@@ -12,6 +12,7 @@ import LambdaTrek.Simulation.Ship
 import Lens.Micro
 import Lens.Micro.Mtl
 import Lens.Micro.TH
+import System.Random
 
 data GameState
   = GameState
@@ -21,13 +22,14 @@ data GameState
   , _gameStateSector :: Sector
   , _gameStateShip :: Ship
   , _gameStateDialog :: [Dialog]
+  , _gameStateRandomGen :: StdGen
   }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Show)
 
 makeLenses ''GameState
 
-initialGameState :: GameState
-initialGameState
+initialGameState :: StdGen -> GameState
+initialGameState gen
   = GameState
   { _gameStateCommandInput = ""
   , _gameStateCommand = Nothing
@@ -35,6 +37,7 @@ initialGameState
   , _gameStateSector = emptySector & stars .~ [(10, 10)]
   , _gameStateShip = Ship 2 2 100 6
   , _gameStateDialog = []
+  , _gameStateRandomGen = gen
   }
 
 say :: Crewmate -> Text -> [Dialog] -> [Dialog]

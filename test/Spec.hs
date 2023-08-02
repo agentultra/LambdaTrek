@@ -11,6 +11,7 @@ import LambdaTrek.Simulation.Ship
 import LambdaTrek.Simulation.Tile
 import LambdaTrek.State
 import Test.Hspec
+import System.Random
 
 main :: IO ()
 main = hspec $ do
@@ -36,17 +37,19 @@ main = hspec $ do
           getTile 200 200 emptySectorTiles `shouldBe` Nothing
 
     describe "updateSimulation" $ do
+      let gen = mkStdGen 0
       it "is basically the id function when there is no command" $ do
-        updateSimulation initialGameState `shouldBe` initialGameState
+        let expectedState = initialGameState gen
+        updateSimulation expectedState `shouldBe` expectedState
 
       context "a valid EngineMove command" $ do
         it "should move the ship to the empty space" $ do
           let stateWithValidMoveCommand
-                = initialGameState
+                = (initialGameState gen)
                 { _gameStateCommand = Just $ EngineMove 8 10
                 }
               expectedState
-                = initialGameState
+                = (initialGameState gen)
                 { _gameStateCommand = Nothing
                 , _gameStateShip = Ship 8 10 98 6
                 }

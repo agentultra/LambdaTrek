@@ -6,9 +6,11 @@ import Brick (defaultMain)
 import LambdaTrek.App
 import LambdaTrek.State
 import LambdaTrek.UI
+import System.Random
 
 run :: IO ()
 run = do
-  let initialState = mkForm initialGameState
+  randGen <- initStdGen
+  let initialState = mkForm $ initialGameState randGen
   _ <- defaultMain lambdaTrekApp initialState
   pure ()

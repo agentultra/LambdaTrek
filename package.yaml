@@ -41,6 +41,7 @@ library:
     - microlens-mtl
     - microlens-th
     - mtl
+    - random
     - split
     - text
     - vty
@@ -68,3 +69,4 @@ tests:
     - array
     - LambdaTrek
     - hspec
+    - random
