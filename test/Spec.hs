@@ -60,7 +60,7 @@ main = hspec $ do
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do
-      let exampleEnemy = Enemy 1 1 1
+      let exampleEnemy = Enemy 1 1 1 0
       it "should return True of the enemy is in range" $ do
         enemyInRange (0, 0) (3, 3) exampleEnemy `shouldBe` True
 
@@ -69,16 +69,16 @@ main = hspec $ do
 
     describe "enemiesInRange" $ do
       let exampleEnemies = Array.listArray (0, 1)
-            [ Enemy 1 1 1
-            , Enemy 4 4 1
+            [ Enemy 1 1 1 0
+            , Enemy 4 4 1 0
             ]
       it "should return all enemies in the range" $
         enemiesInRange (0, 0) (8, 8) exampleEnemies
         `shouldBe`
-        [(0, Enemy 1 1 1), (1, Enemy 4 4 1)]
+        [(0, Enemy 1 1 1 0), (1, Enemy 4 4 1 0)]
 
       it "should return some enemies in the range" $
-        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1)]
+        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1 0)]
 
     describe "calculateEnemyPhaserDamage" $ do
       let initState = initialGameState (mkStdGen 0)

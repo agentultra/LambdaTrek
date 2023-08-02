@@ -29,7 +29,7 @@ data Sector
 makeFields ''Sector
 
 emptySector :: Sector
-emptySector = Sector [] $ listArray (0,0) [Enemy 8 3 20]
+emptySector = Sector [] $ listArray (0,0) [Enemy 8 3 20 10]
 
 newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
   deriving (Eq, Ord, Show)
