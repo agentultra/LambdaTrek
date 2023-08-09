@@ -23,17 +23,23 @@ import System.Random
 handleFirePhasers :: Int -> PhaserMode -> State GameState ()
 handleFirePhasers energyAmt firingMode = do
   enemies <- getEnemiesInPhaserRange
-  unless (null enemies) $
-    case firingMode of
-      PhaserAutomatic -> do
-        let energyAmount = energyAmt `div` length enemies
-        damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
-        gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
-        gameStateSector . enemyShips %= \ships ->
-          ships Array.// map resultToEnemyIx damagedEnemies
-        forM_ damagedEnemies $ \PhaserDamageResult {..} ->
-          sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
-      PhaserManual -> pure ()
+  playerShip <- use gameStateShip
+  case compare (playerShip^.Ship.energy) energyAmt of
+    LT -> do
+      sayDialog Combat "We don't have that much energy to fire the phasers, sir!"
+      pure ()
+    _ -> do
+      unless (null enemies) $
+        case firingMode of
+          PhaserAutomatic -> do
+            let energyAmount = energyAmt `div` length enemies
+            damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
+            gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
+            gameStateSector . enemyShips %= \ships ->
+              ships Array.// map resultToEnemyIx damagedEnemies
+            forM_ damagedEnemies $ \PhaserDamageResult {..} ->
+              sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
+          PhaserManual -> pure ()
 
 data PhaserDamageResult
   = PhaserDamageResult
