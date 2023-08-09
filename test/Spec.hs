@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Monad.State
@@ -96,15 +97,34 @@ main = hspec $ do
                   , enemyHitPoints = 10
                   , enemyShieldValue = 0
                   }
-              Identity (_, damagedEnemy) = (`evalStateT` initState) $
-                calculateEnemyPhaserDamage 5 (0, e)
-              damageIsApplied enemy damagedE =
-                case compare (damagedE^.hitPoints) (enemy^.hitPoints) of
-                  LT -> True
-                  _  -> False
-          damagedEnemy `shouldSatisfy` damageIsApplied e
+              Identity phaserDamageResult
+                = (`evalStateT` initState)
+                $ calculateEnemyPhaserDamage 5 (0, e)
+              damageIsApplied (PhaserDamageResult damageDealt shieldDamage _ damagedE) =
+                damageDealt /= 0
+                && shieldDamage == 0
+                && damagedE^.shieldValue == 0
+                && damagedE^.hitPoints + damageDealt == e^.hitPoints
+          phaserDamageResult `shouldSatisfy` damageIsApplied
 
       context "When the enemy shields are up" $ do
+        it "should do some damage when the energy is greater than shields" $ do
+          let e = Enemy
+                { enemyPositionX = 0
+                , enemyPositionY = 0
+                , enemyHitPoints = 10
+                , enemyShieldValue = 5
+                }
+              Identity phaserDamageResult
+                = (`evalStateT` initState)
+                $ calculateEnemyPhaserDamage 10 (0, e)
+              shieldDamage (PhaserDamageResult damageDealt shieldDamageDealt _ enemy) =
+                shieldDamageDealt == 5
+                && damageDealt > 0
+                && enemy^.shieldValue == 0
+                && enemy^.hitPoints < e^.hitPoints
+          phaserDamageResult `shouldSatisfy` shieldDamage
+
         it "should prevent some damage" $ do
           let e1 = Enemy
                   { enemyPositionX = 0
@@ -119,10 +139,12 @@ main = hspec $ do
                   , enemyShieldValue = 8
                   }
 
-              Identity (_, damagedE1) = (`evalStateT` initState) $
-                calculateEnemyPhaserDamage 5 (0, e1)
-              Identity (_, damagedE2) = (`evalStateT` initState) $
-                calculateEnemyPhaserDamage 5 (0, e2)
+              Identity (PhaserDamageResult _ _ _ damagedE1)
+                = (`evalStateT` initState)
+                $ calculateEnemyPhaserDamage 5 (0, e1)
+              Identity (PhaserDamageResult _ _ _ damagedE2)
+                = (`evalStateT` initState)
+                $ calculateEnemyPhaserDamage 5 (0, e2)
 
               shieldsReducedDamage (enemy1, enemy2) =
                 case compare (enemy1^.hitPoints) (enemy2^.hitPoints) of
@@ -131,20 +153,41 @@ main = hspec $ do
 
           (damagedE1, damagedE2) `shouldSatisfy` shieldsReducedDamage
 
-        it "should reduce the shields" $ do
+        it "should soak damage" $ do
           let e = Enemy
-                  { enemyPositionX = 0
-                  , enemyPositionY = 0
-                  , enemyHitPoints = 10
-                  , enemyShieldValue = 10
-                  }
+                { enemyPositionX = 0
+                , enemyPositionY = 0
+                , enemyHitPoints = 10
+                , enemyShieldValue = 10
+                }
 
-              Identity (_, damagedEnemy) = (`evalStateT` initState) $
-                calculateEnemyPhaserDamage 5 (0, e)
+              Identity phaserDamageResult
+                = (`evalStateT` initState)
+                $ calculateEnemyPhaserDamage 5 (0, e)
 
-              shieldsReduced enemy damagedE =
-                case compare (enemy^.shieldValue) (damagedE^.shieldValue) of
-                  GT -> True
-                  _  -> False
+              shieldsReduced (PhaserDamageResult damageDealt shieldDamage _ damagedEnemy) =
+                damageDealt == 0
+                && shieldDamage == 5
+                && damagedEnemy^.shieldValue == 5
 
-          damagedEnemy `shouldSatisfy` shieldsReduced e
+          phaserDamageResult `shouldSatisfy` shieldsReduced
+
+        it "should drop shields" $ do
+          let e = Enemy
+                { enemyPositionX = 0
+                , enemyPositionY = 0
+                , enemyHitPoints = 10
+                , enemyShieldValue = 10
+                }
+
+              Identity phaserDamageResult
+                = (`evalStateT` initState)
+                $ calculateEnemyPhaserDamage 10 (0, e)
+
+              shieldsReduced (PhaserDamageResult damageDealt shieldDamage _ damagedEnemy) =
+                damageDealt == 0
+                && shieldDamage == 10
+                && damagedEnemy^.shieldValue == 0
+                && damagedEnemy^.hitPoints == e^.hitPoints
+
+          phaserDamageResult `shouldSatisfy` shieldsReduced

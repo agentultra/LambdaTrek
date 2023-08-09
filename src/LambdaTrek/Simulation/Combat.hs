@@ -48,6 +48,7 @@ data PhaserDamageResult
   , _phaserDamageReportEnemyIdx :: Int
   , _phaserDamageReportEnemy :: Enemy
   }
+  deriving (Eq, Show)
 
 resultToEnemyIx :: PhaserDamageResult -> (Int, Enemy)
 resultToEnemyIx PhaserDamageResult {..} =
@@ -59,8 +60,11 @@ calculateEnemyPhaserDamage
   -> State GameState PhaserDamageResult
 calculateEnemyPhaserDamage amt (idx, enemy) = do
   factor <- randomPhaserFactor
-  let dmgAmount = ceiling (fromIntegral amt * factor) - enemy^.Enemy.shieldValue
-      shieldDmg = 2 -- TODO (james): figure out a good formula
+  let shieldDmg | amt <= enemy^.Enemy.shieldValue = amt
+                | amt > enemy^.Enemy.shieldValue = enemy^.Enemy.shieldValue
+                | otherwise = 0
+      dmgAmount | amt - enemy^.Enemy.shieldValue > 0 = (amt - shieldDmg) + ceiling factor
+                | otherwise = 0
   pure $ PhaserDamageResult
     { _phaserDamageReportHitPointDamage = dmgAmount
     , _phaserDamageReportShieldValueDamage = shieldDmg
@@ -92,13 +96,15 @@ enemiesInRange rangeBoxCorner rangeBoxOffset
   . Array.assocs
 
 generateDamageDialog :: Int -> Enemy -> Text
-generateDamageDialog amt Enemy {..}
+generateDamageDialog amt enmy@Enemy {..}
   = "Damaged enemy ship ("
   <> (T.pack . show $ enemyPositionX)
   <> ", "
   <> (T.pack . show $ enemyPositionY)
   <> ") for "
   <> (T.pack . show $ amt)
+  <> "ENEMY: "
+  <> (T.pack . show $ (enmy^.Enemy.hitPoints, enmy^.Enemy.shieldValue))
 
 randomPhaserFactor :: State GameState Float
 randomPhaserFactor = do
