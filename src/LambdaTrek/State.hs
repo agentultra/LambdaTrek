@@ -14,6 +14,11 @@ import Lens.Micro.Mtl
 import Lens.Micro.TH
 import System.Random
 
+data GameScreen
+  = SectorScreen
+  | GameOverScreen
+  deriving (Bounded, Enum, Eq, Show)
+
 data GameState
   = GameState
   { _gameStateCommandInput :: Text
@@ -23,6 +28,7 @@ data GameState
   , _gameStateShip :: Ship
   , _gameStateDialog :: [Dialog]
   , _gameStateRandomGen :: StdGen
+  , _gameStateScreen :: GameScreen
   }
   deriving (Eq, Show)
 
@@ -38,6 +44,7 @@ initialGameState gen
   , _gameStateShip = Ship 2 2 100 6
   , _gameStateDialog = []
   , _gameStateRandomGen = gen
+  , _gameStateScreen = SectorScreen
   }
 
 say :: Crewmate -> Text -> [Dialog] -> [Dialog]
