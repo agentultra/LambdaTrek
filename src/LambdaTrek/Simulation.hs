@@ -5,7 +5,7 @@ module LambdaTrek.Simulation where
 
 import Control.Monad.State
 import qualified Data.Array as Array
-import qualified Data.List as List
+import Data.Maybe (isJust)
 import qualified Data.Text as Text
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Combat
@@ -39,21 +39,33 @@ handleEngineMove gameState x y =
           ( "Captain, that would take us directly into the star at ("
             <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
           )
-     else if collidesWithEnemies (Array.elems enemies) x y
-          then addDialog gameState Helm
-               ( "Captain, we would collide directly with the enemy ship at ("
-                 <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
-               )
-          else gameState & gameStateShip .~ Ship x y (gameState^.gameStateShip.Ship.energy - 2) (gameState^.gameStateShip.Ship.phaserRange)
+     else case collidesWithEnemies (Array.elems enemies) x y of
+            Just e | Enemy.isDestroyed e ->
+                     addDialog gameState Helm
+                     ( "Captain, we would collide directly with volatile ship debris at ("
+                       <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+                     )
+            Just _ | otherwise ->
+                     addDialog gameState Helm
+                     ( "Captain, we would collide directly with the enemy ship at ("
+                       <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+                     )
+            Nothing -> gameState & gameStateShip .~ Ship x y (gameState^.gameStateShip.Ship.energy - 2) (gameState^.gameStateShip.Ship.phaserRange)
   where
     collidesWithStars :: [(Int, Int)] -> Int -> Int -> Bool
     collidesWithStars ss x' y' = (x', y') `elem` ss
 
-    collidesWithEnemies :: [Enemy] -> Int -> Int -> Bool
-    collidesWithEnemies enemies x' y' = case List.find (collidesWithEnemy x' y') enemies of
-      Nothing -> False
-      Just _ -> True
+    collidesWithEnemies :: [Enemy] -> Int -> Int -> Maybe Enemy
+    collidesWithEnemies enemies x' y' = findMaybe (collidesWithEnemy x' y') enemies
 
-    collidesWithEnemy :: Int -> Int -> Enemy -> Bool
-    collidesWithEnemy x' y' enemy =
-      enemy^.Enemy.positionX == x' && enemy^.Enemy.positionY == y'
+    collidesWithEnemy :: Int -> Int -> Enemy -> Maybe Enemy
+    collidesWithEnemy x' y' enemy
+      | enemy^.Enemy.positionX == x'
+        && enemy^.Enemy.positionY == y' = Just enemy
+      | otherwise = Nothing
+
+findMaybe :: (a -> Maybe a) -> [a] -> Maybe a
+findMaybe _ [] = Nothing
+findMaybe f (x:xs)
+  | isJust $ f x = Just x
+  | otherwise = findMaybe f xs
