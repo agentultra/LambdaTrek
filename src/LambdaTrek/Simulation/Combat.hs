@@ -40,7 +40,9 @@ handleFirePhasers energyAmt firingMode = do
             gameStateSector . enemyShips %= \ships ->
               ships Array.// map resultToEnemyIx damagedEnemies
             forM_ damagedEnemies $ \PhaserDamageResult {..} ->
-              sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
+              if Enemy.isDestroyed _phaserDamageReportEnemy
+              then sayDialog Combat "Enemy ship destroyed, captain!"
+              else sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
           PhaserManual -> pure ()
 
 data PhaserDamageResult
@@ -115,7 +117,7 @@ generateDamageDialog amt enmy@Enemy {..}
   <> "ENEMY: "
   <> (T.pack . show $ (enmy^.Enemy.hitPoints, enmy^.Enemy.shieldValue))
 #else
-  | amt >= 0 = "Weapons did not make contact, sir!"
+  | amt <= 0 = "Weapons did not make contact, sir!"
   | amt < 20 = "Minimal damage, sir."
   | amt < 30 = "We hit the enemy ship, sir."
   | amt < 50 = "A direct hit, captain!"
