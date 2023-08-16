@@ -1,4 +1,5 @@
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Enemy where
@@ -16,6 +17,9 @@ data Enemy
   deriving (Eq, Ord, Show)
 
 makeFields ''Enemy
+
+isDestroyed :: Enemy -> Bool
+isDestroyed Enemy {..} = enemyHitPoints <= 0
 
 applyDamage :: Int -> Enemy -> Enemy
 applyDamage dmg enemy = enemy & hitPoints %~ \hp -> hp - dmg

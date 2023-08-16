@@ -81,6 +81,16 @@ main = hspec $ do
       it "should return some enemies in the range" $
         enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1 0)]
 
+      it "should not return destroyed enemies" $ do
+        let exampleDestroyedEnemies = Array.listArray (0, 2)
+              [ Enemy 1 1 1 0
+              , Enemy 4 4 1 0
+              , Enemy 2 2 0 0
+              ]
+        enemiesInRange (0, 0) (8, 8) exampleDestroyedEnemies
+          `shouldBe`
+          [(0, Enemy 1 1 1 0), (1, Enemy 4 4 1 0)]
+
     describe "calculateEnemyPhaserDamage" $ do
       let initState = initialGameState (mkStdGen 0)
 

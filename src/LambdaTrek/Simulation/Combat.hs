@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -9,6 +10,7 @@ import qualified Data.Array as Array
 import Data.Text (Text)
 import qualified Data.Text as T
 import LambdaTrek.Command
+import LambdaTrek.List (allp)
 import LambdaTrek.State
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy (Enemy (..))
@@ -92,11 +94,18 @@ enemyInRange (topLeftX, topLeftY) (offSetX, offSetY) Enemy {..} =
 
 enemiesInRange :: (Int, Int) -> (Int, Int) -> Array Int Enemy -> [(Int, Enemy)]
 enemiesInRange rangeBoxCorner rangeBoxOffset
-  = filter (enemyInRange rangeBoxCorner rangeBoxOffset . snd)
+  = filter (validEnemy . snd)
   . Array.assocs
+  where
+    validEnemy
+      = allp
+      [ not . Enemy.isDestroyed
+      , enemyInRange rangeBoxCorner rangeBoxOffset
+      ]
 
 generateDamageDialog :: Int -> Enemy -> Text
 generateDamageDialog amt enmy@Enemy {..}
+#ifdef DEBUG
   = "Damaged enemy ship ("
   <> (T.pack . show $ enemyPositionX)
   <> ", "
@@ -105,6 +114,13 @@ generateDamageDialog amt enmy@Enemy {..}
   <> (T.pack . show $ amt)
   <> "ENEMY: "
   <> (T.pack . show $ (enmy^.Enemy.hitPoints, enmy^.Enemy.shieldValue))
+#else
+  | amt >= 0 = "Weapons did not make contact, sir!"
+  | amt < 20 = "Minimal damage, sir."
+  | amt < 30 = "We hit the enemy ship, sir."
+  | amt < 50 = "A direct hit, captain!"
+  | amt > 50 = "The enemy has taken a heavy blow, captain!"
+#endif
 
 randomPhaserFactor :: State GameState Float
 randomPhaserFactor = do

@@ -29,6 +29,7 @@ library
       LambdaTrek.App
       LambdaTrek.Command
       LambdaTrek.Command.Parse
+      LambdaTrek.List
       LambdaTrek.Render
       LambdaTrek.Simulation
       LambdaTrek.Simulation.Combat
