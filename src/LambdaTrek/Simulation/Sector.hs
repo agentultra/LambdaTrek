@@ -68,8 +68,11 @@ buildSectorTiles ship sector =
       unsafeSetTile x y Star tiles
 
     addEnemy :: SectorTiles -> Enemy -> SectorTiles
-    addEnemy tiles enemy =
-      unsafeSetTile (enemy^.positionX) (enemy^.positionY) EnemyShip tiles
+    addEnemy tiles enemy
+      | isDestroyed enemy = unsafeSetTile
+        (enemy^.positionX) (enemy^.positionY) DestroyedEnemyShip tiles
+      | otherwise =
+        unsafeSetTile (enemy^.positionX) (enemy^.positionY) EnemyShip tiles
 
 render :: SectorTiles -> Text
 render sector =
