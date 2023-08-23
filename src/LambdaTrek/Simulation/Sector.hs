@@ -14,6 +14,7 @@ import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Station (Station (..))
+import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Tile (Tile)
 import qualified LambdaTrek.Simulation.Tile as Tile
 import Lens.Micro
@@ -63,7 +64,8 @@ buildSectorTiles :: Ship -> Sector -> SectorTiles
 buildSectorTiles ship sector =
   let starterTiles = unsafeSetTile (ship^.Ship.positionX) (ship^.Ship.positionY) Tile.PlayerShip emptySectorTiles
       starTiles = foldl' addStar starterTiles $ sector^.stars
-  in foldl' addEnemy starTiles $ sector^.enemyShips
+      enemyTiles = foldl' addEnemy starTiles $ sector^.enemyShips
+  in foldl' addStation enemyTiles $ sector^.stations
   where
     addStar :: SectorTiles -> (Int, Int) -> SectorTiles
     addStar tiles (x, y) =
@@ -75,6 +77,9 @@ buildSectorTiles ship sector =
         (enemy^.positionX) (enemy^.positionY) Tile.DestroyedEnemyShip tiles
       | otherwise =
         unsafeSetTile (enemy^.positionX) (enemy^.positionY) Tile.EnemyShip tiles
+
+    addStation :: SectorTiles -> Station -> SectorTiles
+    addStation tiles station = unsafeSetTile (station^.Station.positionX) (station^.Station.positionY) Tile.Station tiles
 
 render :: SectorTiles -> Text
 render sector =
