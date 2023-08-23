@@ -64,8 +64,8 @@ sectorDisplay gameState =
        <=> hBorder
        <=> vLimit 5 (sectorDialog gameState)
 
-simDisplay :: Form GameState e Name -> Widget Name
-simDisplay f = sectorDisplay $ formState f
+sectorScreen :: Form GameState e Name -> Widget Name
+sectorScreen f = sectorDisplay $ formState f
 
 ui :: Form GameState e Name -> Widget Name
 ui f =
@@ -73,7 +73,7 @@ ui f =
     withBorderStyle unicode $
     borderWithLabel
     (str "LambdaTrek")
-    (simDisplay f
+    (sectorScreen f
       <+> vBorder
       <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f))
 
