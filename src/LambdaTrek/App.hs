@@ -13,6 +13,7 @@ import qualified Graphics.Vty as V
 import LambdaTrek.Command.Parse
 import LambdaTrek.Render
 import LambdaTrek.Simulation
+import LambdaTrek.Simulation.Ship
 import LambdaTrek.State
 import LambdaTrek.UI
 import Lens.Micro
@@ -45,6 +46,7 @@ lambdaHandleEvent ev = case ev of
       Right command ->
         modify
         . updateFormState
+        . checkForGameOver
         . updateSimulation
         $ s { _gameStateCommand = Just command
             , _gameStateCommandError = Nothing
@@ -63,3 +65,10 @@ lambdaAttrMap _ = attrMap defAttr
   [ (attrName "highlight-error", fg V.red)
   , (attrName "highlight-helm", fg V.yellow)
   ]
+
+checkForGameOver :: GameState -> GameState
+checkForGameOver gameState =
+  let ship = gameState^.gameStateShip
+  in if ship^.energy <= 0
+     then gameState & gameStateScreen .~ GameOverScreen
+     else gameState
