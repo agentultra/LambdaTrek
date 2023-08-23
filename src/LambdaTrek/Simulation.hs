@@ -19,50 +19,69 @@ import LambdaTrek.Simulation.Ship (Ship (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
 import Lens.Micro
+import Lens.Micro.Mtl
 
-updateSimulation :: GameState -> GameState
-updateSimulation gameState =
-  case gameState^.gameStateCommand of
-    Just cmd -> handleCommand gameState cmd & gameStateCommand .~ Nothing
-    _ -> gameState
+updateSimulation :: State GameState ()
+updateSimulation = do
+  command <- use gameStateCommand
+  case command of
+    Just cmd -> do
+      handleCommand cmd
+      gameStateCommand .= Nothing
+    _ -> pure ()
 
-handleCommand :: GameState -> Command -> GameState
-handleCommand gameState = \case
-  EngineMove x y -> handleEngineMove gameState x y
-  JumpMove _ -> gameState
-  FirePhasers amt fireMode -> (`execState` gameState) $ handleFirePhasers amt fireMode
+handleCommand :: Command -> State GameState ()
+handleCommand = \case
+    EngineMove x y -> handleEngineMove x y
+    JumpMove _ -> pure ()
+    FirePhasers amt fireMode -> handleFirePhasers amt fireMode
 
-handleEngineMove :: GameState -> Int -> Int -> GameState
-handleEngineMove gameState x y =
-  let stars_ = gameState^.(gameStateSector . stars)
-      enemies = gameState^.(gameStateSector . enemyShips)
-      stations_ = gameState^.(gameStateSector . stations)
-  in if collidesWithStars stars_ x y
-     then addDialog gameState Helm
-          ( "Captain, that would take us directly into the star at ("
-            <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
-          )
-     else case collidesWithEnemies (Array.elems enemies) x y of
-            Just e | Enemy.isDestroyed e ->
-                     addDialog gameState Helm
-                     ( "Captain, we would collide directly with volatile ship debris at ("
-                       <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
-                     )
-            Just _ | otherwise ->
-                     addDialog gameState Helm
-                     ( "Captain, we would collide directly with the enemy ship at ("
-                       <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
-                     )
-            Nothing -> case collidesWithStations (Array.elems stations_) x y of
-              Just _ -> addDialog gameState Helm
-                        ( "Captain, we would collide with the station at ("
-                          <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
-                        )
-              Nothing -> gameState & gameStateShip .~ Ship x y (gameState^.gameStateShip.Ship.energy - 2) (gameState^.gameStateShip.Ship.phaserRange)
+handleEngineMove :: Int -> Int -> State GameState ()
+handleEngineMove x y = do
+  ship_ <- use gameStateShip
+  didCollideWithStars <- handleStarCollisions x y
+  didCollideWithEnemies <- handleEnemyCollisions x y
+  didCollideWithStations <- handleStationCollisions x y
+  case (didCollideWithStars, didCollideWithEnemies, didCollideWithStations) of
+    (Missed, Missed, Missed) ->
+      gameStateShip .= Ship x y (ship_^.Ship.energy - 2) (ship_^.Ship.phaserRange)
+    _ -> pure ()
+
+data CollisionResult = Collide | Missed deriving (Eq, Show)
+
+handleStarCollisions :: Int -> Int -> State GameState CollisionResult
+handleStarCollisions x y = do
+  stars_ <- use (gameStateSector . stars)
+  if collidesWithStars stars_ x y
+    then do
+    sayDialog Helm
+      ( "Captain, that would take us directly into the star at ("
+        <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+      )
+    pure Collide
+    else pure Missed
   where
     collidesWithStars :: [(Int, Int)] -> Int -> Int -> Bool
     collidesWithStars ss x' y' = (x', y') `elem` ss
 
+handleEnemyCollisions :: Int -> Int -> State GameState CollisionResult
+handleEnemyCollisions x y = do
+  enemies_ <- use (gameStateSector . enemyShips)
+  case collidesWithEnemies (Array.elems enemies_) x y of
+    Just e | Enemy.isDestroyed e -> do
+               sayDialog Helm
+                 ( "Captain, we would collide directly with volatile ship debris at ("
+                   <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+                 )
+               pure Collide
+    Just _ | otherwise -> do
+               sayDialog Helm
+                 ( "Captain, we would collide directly with the enemy ship at ("
+                   <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+                 )
+               pure Collide
+    Nothing -> pure Missed
+  where
     collidesWithEnemies :: [Enemy] -> Int -> Int -> Maybe Enemy
     collidesWithEnemies enemies x' y' = findMaybe (collidesWithEnemy x' y') enemies
 
@@ -72,6 +91,18 @@ handleEngineMove gameState x y =
         && enemy^.Enemy.positionY == y' = Just enemy
       | otherwise = Nothing
 
+handleStationCollisions :: Int -> Int -> State GameState CollisionResult
+handleStationCollisions x y = do
+  stations_ <- use (gameStateSector . stations)
+  case collidesWithStations (Array.elems stations_) x y of
+    Just _ -> do
+      sayDialog Helm
+        ( "Captain, we would collide with the station at ("
+          <> Text.pack (show x) <> ", " <> Text.pack (show y) <> ")"
+        )
+      pure Collide
+    Nothing -> pure Missed
+  where
     collidesWithStations :: [Station] -> Int -> Int -> Maybe Station
     collidesWithStations stations' x' y' = findMaybe (collidesWithStation x' y') stations'
 

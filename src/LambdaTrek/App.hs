@@ -2,6 +2,7 @@
 
 module LambdaTrek.App where
 
+import Control.Monad.State
 import Brick.AttrMap
 import Brick.Forms
 import Brick.Main
@@ -38,7 +39,7 @@ lambdaHandleEvent ev = case ev of
       Left commandError ->
         modify
         . updateFormState
-        . updateSimulation
+        . (\s' -> (`execState` s') updateSimulation)
         $ s { _gameStateCommandError = Just $ renderCommandParseError commandError
             , _gameStateCommand = Nothing
             , _gameStateCommandInput = ""
@@ -47,7 +48,7 @@ lambdaHandleEvent ev = case ev of
         modify
         . updateFormState
         . checkForGameOver
-        . updateSimulation
+        . (\s' -> (`execState` s') updateSimulation)
         $ s { _gameStateCommand = Just command
             , _gameStateCommandError = Nothing
             , _gameStateCommandInput = ""

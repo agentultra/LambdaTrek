@@ -43,8 +43,10 @@ main = hspec $ do
     describe "updateSimulation" $ do
       let gen = mkStdGen 0
       it "is basically the id function when there is no command" $ do
-        let expectedState = initialGameState gen
-        updateSimulation expectedState `shouldBe` expectedState
+        let initGameState = initialGameState gen
+        ((`execState` initGameState) updateSimulation)
+          `shouldBe`
+          initGameState
 
       context "a valid EngineMove command" $ do
         it "should move the ship to the empty space" $ do
@@ -57,7 +59,7 @@ main = hspec $ do
                 { _gameStateCommand = Nothing
                 , _gameStateShip = Ship 8 10 98 6
                 }
-          updateSimulation stateWithValidMoveCommand `shouldBe` expectedState
+          ((`execState` stateWithValidMoveCommand) updateSimulation) `shouldBe` expectedState
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do
