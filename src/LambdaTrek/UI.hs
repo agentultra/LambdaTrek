@@ -67,6 +67,9 @@ sectorDisplay gameState =
 sectorScreen :: Form GameState e Name -> Widget Name
 sectorScreen f = sectorDisplay $ formState f
 
+gameOverScreen :: Form GameState e Name -> Widget Name
+gameOverScreen _ = str "Game Over"
+
 ui :: Form GameState e Name -> Widget Name
 ui f =
     joinBorders $
