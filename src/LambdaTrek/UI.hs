@@ -68,7 +68,9 @@ sectorScreen :: Form GameState e Name -> Widget Name
 sectorScreen f = sectorDisplay $ formState f
 
 gameOverScreen :: Form GameState e Name -> Widget Name
-gameOverScreen _ = str "Game Over"
+gameOverScreen f =
+  let gameState = formState f
+  in str ("Game Over: " ++ show (gameState^.(gameStateShip . Ship.energy)))
 
 ui :: Form GameState e Name -> Widget Name
 ui f =
