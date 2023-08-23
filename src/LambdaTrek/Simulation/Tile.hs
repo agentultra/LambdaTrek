@@ -11,6 +11,7 @@ data Tile
   | DestroyedEnemyShip
   | EmptySpace
   | Star
+  | Station
   deriving (Bounded, Enum, Eq, Show)
 
 render :: Tile -> Text
@@ -20,3 +21,4 @@ render = \case
   DestroyedEnemyShip -> "&"
   EmptySpace -> "."
   Star -> "*"
+  Station -> "$"

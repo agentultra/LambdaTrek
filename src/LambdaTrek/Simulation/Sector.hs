@@ -14,8 +14,7 @@ import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Station (Station (..))
-import qualified LambdaTrek.Simulation.Station as Station
-import LambdaTrek.Simulation.Tile (Tile (..))
+import LambdaTrek.Simulation.Tile (Tile)
 import qualified LambdaTrek.Simulation.Tile as Tile
 import Lens.Micro
 import Lens.Micro.TH
@@ -40,7 +39,7 @@ newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
 emptySectorTiles :: SectorTiles
 emptySectorTiles
   = SectorTiles
-  $ listArray (0, (15 * 15) - 1) (repeat $ fromEnum EmptySpace)
+  $ listArray (0, (15 * 15) - 1) (repeat $ fromEnum Tile.EmptySpace)
 
 getTile :: Int -> Int -> SectorTiles -> Maybe Tile
 getTile x y sectorTiles
@@ -62,20 +61,20 @@ unsafeSetTile x y tile sectorTiles =
 
 buildSectorTiles :: Ship -> Sector -> SectorTiles
 buildSectorTiles ship sector =
-  let starterTiles = unsafeSetTile (ship^.Ship.positionX) (ship^.Ship.positionY) PlayerShip emptySectorTiles
+  let starterTiles = unsafeSetTile (ship^.Ship.positionX) (ship^.Ship.positionY) Tile.PlayerShip emptySectorTiles
       starTiles = foldl' addStar starterTiles $ sector^.stars
   in foldl' addEnemy starTiles $ sector^.enemyShips
   where
     addStar :: SectorTiles -> (Int, Int) -> SectorTiles
     addStar tiles (x, y) =
-      unsafeSetTile x y Star tiles
+      unsafeSetTile x y Tile.Star tiles
 
     addEnemy :: SectorTiles -> Enemy -> SectorTiles
     addEnemy tiles enemy
       | isDestroyed enemy = unsafeSetTile
-        (enemy^.positionX) (enemy^.positionY) DestroyedEnemyShip tiles
+        (enemy^.positionX) (enemy^.positionY) Tile.DestroyedEnemyShip tiles
       | otherwise =
-        unsafeSetTile (enemy^.positionX) (enemy^.positionY) EnemyShip tiles
+        unsafeSetTile (enemy^.positionX) (enemy^.positionY) Tile.EnemyShip tiles
 
 render :: SectorTiles -> Text
 render sector =
