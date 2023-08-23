@@ -72,13 +72,19 @@ gameOverScreen _ = str "Game Over"
 
 ui :: Form GameState e Name -> Widget Name
 ui f =
-    joinBorders $
-    withBorderStyle unicode $
-    borderWithLabel
-    (str "LambdaTrek")
-    (sectorScreen f
-      <+> vBorder
-      <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f))
+  let gameState = formState f
+      gameScreen = case gameState^.gameStateScreen of
+        SectorScreen ->
+          sectorScreen f
+          <+> vBorder
+          <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f)
+        GameOverScreen -> gameOverScreen f
+  in joinBorders $
+     withBorderStyle unicode $
+     borderWithLabel
+     (str "LambdaTrek")
+     gameScreen
+
 
 mkForm :: GameState -> Form GameState e Name
 mkForm =
