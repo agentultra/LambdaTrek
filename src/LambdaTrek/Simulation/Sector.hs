@@ -13,6 +13,8 @@ import qualified Data.Text as Text
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
+import LambdaTrek.Simulation.Station (Station (..))
+import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Tile (Tile (..))
 import qualified LambdaTrek.Simulation.Tile as Tile
 import Lens.Micro
@@ -23,13 +25,14 @@ data Sector
   = Sector
   { sectorStars :: [(Int, Int)]
   , sectorEnemyShips :: Array Int Enemy
+  , sectorStations :: Array Int Station
   }
   deriving (Eq, Ord, Show)
 
 makeFields ''Sector
 
 emptySector :: Sector
-emptySector = Sector [] $ listArray (0,0) [Enemy 8 3 20 10]
+emptySector = Sector [] (listArray (0,0) [Enemy 8 3 20 10]) (listArray (0,0) [Station 9 1 100])
 
 newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
   deriving (Eq, Ord, Show)

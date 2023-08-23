@@ -37,6 +37,7 @@ library
       LambdaTrek.Simulation.Enemy
       LambdaTrek.Simulation.Sector
       LambdaTrek.Simulation.Ship
+      LambdaTrek.Simulation.Station
       LambdaTrek.Simulation.Tile
       LambdaTrek.State
       LambdaTrek.UI
