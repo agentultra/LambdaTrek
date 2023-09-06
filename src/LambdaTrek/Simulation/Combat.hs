@@ -8,7 +8,6 @@ import Control.Monad.State
 import Data.Array
 import qualified Data.Array as Array
 import Data.Text (Text)
-import qualified Data.Text as T
 import LambdaTrek.Command
 import LambdaTrek.List (allp)
 import LambdaTrek.State
@@ -106,7 +105,7 @@ enemiesInRange rangeBoxCorner rangeBoxOffset
       ]
 
 generateDamageDialog :: Int -> Enemy -> Text
-generateDamageDialog amt enmy@Enemy {..}
+generateDamageDialog amt Enemy {..}
 #ifdef DEBUG
   = "Damaged enemy ship ("
   <> (T.pack . show $ enemyPositionX)
