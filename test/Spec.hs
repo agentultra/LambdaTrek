@@ -8,6 +8,7 @@ import LambdaTrek.Command
 import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
 import LambdaTrek.Simulation.Combat
+import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
@@ -60,6 +61,35 @@ main = hspec $ do
                 , _gameStateShip = Ship 8 10 98 6
                 }
           ((`execState` stateWithValidMoveCommand) updateSimulation) `shouldBe` expectedState
+
+      context "a Dock command" $ do
+        it "should recharge the ship energy when next to a station" $ do
+          let depletedShipState
+                = (initialGameState gen)
+                { _gameStateShip = Ship 8 1 0 6
+                , _gameStateCommand = Just Dock
+                }
+              expectedState
+                = (initialGameState gen)
+                { _gameStateShip = Ship 8 1 100 6
+                , _gameStateCommand = Nothing
+                , _gameStateDialog = [Dialog Helm "Replenishing supplies at station (9, 1), sir!"]
+                }
+          ((`execState` depletedShipState) updateSimulation) `shouldBe` expectedState
+
+        it "should not recharge the ship when not adjacent to a station" $ do
+          let depletedShipState
+                = (initialGameState gen)
+                { _gameStateShip = Ship 0 0 0 6
+                , _gameStateCommand = Just Dock
+                }
+              expectedState
+                = (initialGameState gen)
+                { _gameStateShip = Ship 0 0 0 6
+                , _gameStateCommand = Nothing
+                , _gameStateDialog = [Dialog Helm "There is no starbase to dock at nearby, captain."]
+                }
+          ((`execState` depletedShipState) updateSimulation) `shouldBe` expectedState
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do

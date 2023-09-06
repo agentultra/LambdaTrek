@@ -5,6 +5,7 @@ module LambdaTrek.Simulation where
 
 import Control.Monad.State
 import qualified Data.Array as Array
+import qualified Data.List as List
 import Data.Maybe (isJust)
 import qualified Data.Text as Text
 import LambdaTrek.Command
@@ -35,6 +36,7 @@ handleCommand = \case
     EngineMove x y -> handleEngineMove x y
     JumpMove _ -> pure ()
     FirePhasers amt fireMode -> handleFirePhasers amt fireMode
+    Dock -> handleDocking
 
 handleEngineMove :: Int -> Int -> State GameState ()
 handleEngineMove x y = do
@@ -112,8 +114,42 @@ handleStationCollisions x y = do
         && station^.Station.positionY == y' = Just station
       | otherwise = Nothing
 
+handleDocking :: State GameState ()
+handleDocking = do
+  maybeStation <- findStation
+  case maybeStation of
+    Nothing ->
+      sayDialog Helm "There is no starbase to dock at nearby, captain."
+    Just station -> do
+      gameStateShip . Ship.energy .= 100
+      sayDialog Helm
+        ("Replenishing supplies at station ("
+         <> Text.pack (show (station^.Station.positionX))
+         <> ", "
+         <> Text.pack (show (station^.Station.positionY))
+         <> "), sir!"
+        )
+  where
+    findStation :: State GameState (Maybe Station)
+    findStation = do
+      ship <- use gameStateShip
+      sectorStations' <- Array.elems <$> use (gameStateSector . stations)
+      pure . List.find (isAdjacent ship) $ sectorStations'
+
+    isAdjacent :: Ship -> Station -> Bool
+    isAdjacent ship station =
+      let shipX = ship^.Ship.positionX
+          shipY = ship^.Ship.positionY
+          stationX = station^.Station.positionX
+          stationY = station^.Station.positionY
+      in plusOrMinus1 shipX stationX && plusOrMinus1 shipY stationY
+
 findMaybe :: (a -> Maybe a) -> [a] -> Maybe a
 findMaybe _ [] = Nothing
 findMaybe f (x:xs)
   | isJust $ f x = Just x
   | otherwise = findMaybe f xs
+
+plusOrMinus1 :: Int -> Int -> Bool
+plusOrMinus1 x y =
+  x - y == 1 || x - y == (-1) || x == y

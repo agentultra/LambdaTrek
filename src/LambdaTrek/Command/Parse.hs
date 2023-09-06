@@ -86,8 +86,14 @@ parseFirePhasers = do
   eof
   pure . Right $ FirePhasers amt fireMode
 
+parseDock :: ReadP (Either CommandParseError Command)
+parseDock = do
+  _ <- string "DOCK"
+  eof
+  pure . Right $ Dock
+
 parseCommand :: ReadP (Either CommandParseError Command)
-parseCommand = choice [parseEngineMove, parseJumpMove, parseFirePhasers]
+parseCommand = choice [parseEngineMove, parseJumpMove, parseFirePhasers, parseDock]
 
 runCommandParser :: String -> Either CommandParseError Command
 runCommandParser = handleParseResult . readP_to_S parseCommand
