@@ -27,27 +27,30 @@ updateSimulation = do
   command <- use gameStateCommand
   case command of
     Just cmd -> do
-      handleCommand cmd
+      commandResult <- handleCommand cmd
+      when (commandResult == Performed) $ do
+        gameStateRemainingTurns %= flip (-) (turnCost cmd)
       gameStateCommand .= Nothing
     _ -> pure ()
 
-handleCommand :: Command -> State GameState ()
+handleCommand :: Command -> State GameState CommandResult
 handleCommand = \case
     EngineMove x y -> handleEngineMove x y
-    JumpMove _ -> pure ()
+    JumpMove _ -> pure Denied -- TODO: not implemented
     FirePhasers amt fireMode -> handleFirePhasers amt fireMode
     Dock -> handleDocking
 
-handleEngineMove :: Int -> Int -> State GameState ()
+handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
   ship_ <- use gameStateShip
   didCollideWithStars <- handleStarCollisions x y
   didCollideWithEnemies <- handleEnemyCollisions x y
   didCollideWithStations <- handleStationCollisions x y
   case (didCollideWithStars, didCollideWithEnemies, didCollideWithStations) of
-    (Missed, Missed, Missed) ->
+    (Missed, Missed, Missed) -> do
       gameStateShip .= Ship x y (ship_^.Ship.energy - 2) (ship_^.Ship.phaserRange)
-    _ -> pure ()
+      pure Performed
+    _ -> pure Denied
 
 data CollisionResult = Collide | Missed deriving (Eq, Show)
 
@@ -114,12 +117,13 @@ handleStationCollisions x y = do
         && station^.Station.positionY == y' = Just station
       | otherwise = Nothing
 
-handleDocking :: State GameState ()
+handleDocking :: State GameState CommandResult
 handleDocking = do
   maybeStation <- findStation
   case maybeStation of
-    Nothing ->
+    Nothing -> do
       sayDialog Helm "There is no starbase to dock at nearby, captain."
+      pure Denied
     Just station -> do
       gameStateShip . Ship.energy .= 100
       sayDialog Helm
@@ -129,6 +133,7 @@ handleDocking = do
          <> Text.pack (show (station^.Station.positionY))
          <> "), sir!"
         )
+      pure Performed
   where
     findStation :: State GameState (Maybe Station)
     findStation = do

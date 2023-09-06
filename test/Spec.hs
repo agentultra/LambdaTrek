@@ -59,6 +59,7 @@ main = hspec $ do
                 = (initialGameState gen)
                 { _gameStateCommand = Nothing
                 , _gameStateShip = Ship 8 10 98 6
+                , _gameStateRemainingTurns = 198
                 }
           ((`execState` stateWithValidMoveCommand) updateSimulation) `shouldBe` expectedState
 
@@ -74,6 +75,7 @@ main = hspec $ do
                 { _gameStateShip = Ship 8 1 100 6
                 , _gameStateCommand = Nothing
                 , _gameStateDialog = [Dialog Helm "Replenishing supplies at station (9, 1), sir!"]
+                , _gameStateRemainingTurns = 195
                 }
           ((`execState` depletedShipState) updateSimulation) `shouldBe` expectedState
 
@@ -88,6 +90,7 @@ main = hspec $ do
                 { _gameStateShip = Ship 0 0 0 6
                 , _gameStateCommand = Nothing
                 , _gameStateDialog = [Dialog Helm "There is no starbase to dock at nearby, captain."]
+                , _gameStateRemainingTurns = 200
                 }
           ((`execState` depletedShipState) updateSimulation) `shouldBe` expectedState
 

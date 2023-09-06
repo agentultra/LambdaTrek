@@ -21,28 +21,32 @@ import Lens.Micro
 import Lens.Micro.Mtl
 import System.Random
 
-handleFirePhasers :: Int -> PhaserMode -> State GameState ()
+handleFirePhasers :: Int -> PhaserMode -> State GameState CommandResult
 handleFirePhasers energyAmt firingMode = do
   enemies <- getEnemiesInPhaserRange
   playerShip <- use gameStateShip
   case compare (playerShip^.Ship.energy) energyAmt of
     LT -> do
       sayDialog Combat "We don't have that much energy to fire the phasers, sir!"
-      pure ()
-    _ -> do
-      unless (null enemies) $
-        case firingMode of
-          PhaserAutomatic -> do
-            let energyAmount = energyAmt `div` length enemies
-            damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
-            gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
-            gameStateSector . enemyShips %= \ships ->
-              ships Array.// map resultToEnemyIx damagedEnemies
-            forM_ damagedEnemies $ \PhaserDamageResult {..} ->
-              if Enemy.isDestroyed _phaserDamageReportEnemy
-              then sayDialog Combat "Enemy ship destroyed, captain!"
-              else sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
-          PhaserManual -> pure ()
+      pure Denied
+    _ -> doFire energyAmt enemies firingMode
+
+doFire :: Int -> [(Int, Enemy)] -> PhaserMode -> State GameState CommandResult
+doFire energyAmt enemies PhaserAutomatic = do
+  let energyAmount = energyAmt `div` length enemies
+  damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
+  gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
+  gameStateSector . enemyShips %= \ships ->
+    ships Array.// map resultToEnemyIx damagedEnemies
+  x <- forM damagedEnemies $ \PhaserDamageResult {..} ->
+    if Enemy.isDestroyed _phaserDamageReportEnemy
+    then sayDialog Combat "Enemy ship destroyed, captain!"
+    else sayDialog Combat (generateDamageDialog _phaserDamageReportHitPointDamage _phaserDamageReportEnemy)
+  if null x
+    then pure Performed
+    else pure Denied
+
+doFire _ _ PhaserManual = pure Denied
 
 data PhaserDamageResult
   = PhaserDamageResult

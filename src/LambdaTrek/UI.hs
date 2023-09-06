@@ -27,7 +27,11 @@ data Name
 infoPanel :: Form GameState e Name -> Widget Name
 infoPanel f =
   let gameState = formState f
-  in center . renderTable $ table [[str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]]
+  in center . renderTable
+     $ table
+     [ [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
+     , [str "Remaining Turns:", str $ show (gameState^.gameStateRemainingTurns)]
+     ]
 
 commandPallet :: Form GameState e Name -> Widget Name
 commandPallet f =

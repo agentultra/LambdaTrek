@@ -26,6 +26,7 @@ data GameState
   , _gameStateCommandError :: Maybe Text
   , _gameStateSector :: Sector
   , _gameStateShip :: Ship
+  , _gameStateRemainingTurns :: Int
   , _gameStateDialog :: [Dialog]
   , _gameStateRandomGen :: StdGen
   , _gameStateScreen :: GameScreen
@@ -42,6 +43,7 @@ initialGameState gen
   , _gameStateCommandError = Nothing
   , _gameStateSector = emptySector & stars .~ [(10, 10)]
   , _gameStateShip = Ship 2 2 100 6
+  , _gameStateRemainingTurns = 200
   , _gameStateDialog = []
   , _gameStateRandomGen = gen
   , _gameStateScreen = SectorScreen
