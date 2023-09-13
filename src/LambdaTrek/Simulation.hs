@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module LambdaTrek.Simulation where
 
@@ -12,6 +13,7 @@ import LambdaTrek.Command
 import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy (Enemy (..))
+import LambdaTrek.Simulation.Enemy.AI
 import qualified LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Station (Station (..))
@@ -31,6 +33,7 @@ updateSimulation = do
       when (commandResult == Performed) $ do
         gameStateRemainingTurns %= flip (-) (turnCost cmd)
       gameStateCommand .= Nothing
+      handleEnemies
     _ -> pure ()
 
 handleCommand :: Command -> State GameState CommandResult
@@ -148,6 +151,19 @@ handleDocking = do
           stationX = station^.Station.positionX
           stationY = station^.Station.positionY
       in plusOrMinus1 shipX stationX && plusOrMinus1 shipY stationY
+
+handleEnemies :: State GameState ()
+handleEnemies = do
+  enemies <- use (gameStateSector . enemyShips)
+  forM_ enemies handleEnemy
+
+handleEnemy :: Enemy -> State GameState ()
+handleEnemy enemy@Enemy {..} =
+  case enemyState of
+    Patrolling -> handleEnemyPatrolling enemy
+
+handleEnemyPatrolling :: Enemy -> State GameState ()
+handleEnemyPatrolling _ = pure ()
 
 findMaybe :: (a -> Maybe a) -> [a] -> Maybe a
 findMaybe _ [] = Nothing
