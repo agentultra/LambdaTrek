@@ -9,7 +9,7 @@ import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
 import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
-import LambdaTrek.Simulation.Enemy
+import LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship as Ship
@@ -232,6 +232,29 @@ main = hspec $ do
                 && damagedEnemy^.hitPoints == e^.hitPoints
 
           phaserDamageResult `shouldSatisfy` shieldsReduced
+
+  describe "LambdaTrek.Simulation.Enemy.AI" $ do
+    let gen = mkStdGen 0
+    context "When in the Patrolling state" $ do
+      it "should do nothing when the player ship is out of range" $ do
+        let initialState
+              = (initialGameState gen)
+              { _gameStateShip = Ship 0 0 6 100
+              , _gameStateCommand = Just (EngineMove 14 14)
+              }
+            nextState = (`execState` initialState) updateSimulation
+            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+        enemy^.Enemy.state `shouldBe` Patrolling
+
+      it "should change to Fighting when the player ship is in range" $ do
+        let initialState
+              = (initialGameState gen)
+              { _gameStateShip = Ship 14 14 6 100
+              , _gameStateCommand = Just (EngineMove 7 3)
+              }
+            nextState = (`execState` initialState) updateSimulation
+            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+        enemy^.Enemy.state `shouldBe` Fighting
 
 hasDialog :: Dialog -> [Dialog] -> Bool
 hasDialog = elem

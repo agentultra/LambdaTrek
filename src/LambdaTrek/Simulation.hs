@@ -155,15 +155,39 @@ handleDocking = do
 handleEnemies :: State GameState ()
 handleEnemies = do
   enemies <- use (gameStateSector . enemyShips)
-  forM_ enemies handleEnemy
+  forM_ (Array.assocs enemies) handleEnemy
 
-handleEnemy :: Enemy -> State GameState ()
-handleEnemy enemy@Enemy {..} =
+handleEnemy :: (Int, Enemy) -> State GameState ()
+handleEnemy e@(_, Enemy {..}) =
   case enemyState of
-    Patrolling -> handleEnemyPatrolling enemy
+    Patrolling -> handleEnemyPatrolling e
+    Fighting -> handleEnemyFighting e
 
-handleEnemyPatrolling :: Enemy -> State GameState ()
-handleEnemyPatrolling _ = pure ()
+handleEnemyPatrolling :: (Int, Enemy) -> State GameState ()
+handleEnemyPatrolling (enemyIx, enemy) = do
+  playerShip <- use gameStateShip
+  when (inRange enemy playerShip 3) $ do
+    zoom gameStateSector $ do
+      enemyShips %= \enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Fighting )]
+
+handleEnemyFighting :: (Int, Enemy) -> State GameState ()
+handleEnemyFighting _ = pure ()
+
+class HasPosition a where
+  getPosition :: a -> (Int, Int)
+
+instance HasPosition Enemy where
+  getPosition Enemy {..} = (enemyPositionX, enemyPositionY)
+
+instance HasPosition Ship where
+  getPosition Ship {..} = (shipPositionX, shipPositionY)
+
+inRange :: (HasPosition a , HasPosition b) => a -> b -> Int -> Bool
+inRange a b range =
+  let (aX, aY) = getPosition a
+      (bX, bY) = getPosition b
+      distance = abs (bX - aX) + abs (bY - aY)
+  in distance <= range
 
 findMaybe :: (a -> Maybe a) -> [a] -> Maybe a
 findMaybe _ [] = Nothing
