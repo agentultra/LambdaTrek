@@ -11,6 +11,7 @@ import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as Text
 import LambdaTrek.Simulation.Enemy
+import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Ship (Ship)
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Station (Station (..))
@@ -32,7 +33,7 @@ data Sector
 makeFields ''Sector
 
 emptySector :: Sector
-emptySector = Sector [] (listArray (0,0) [Enemy 8 3 20 10]) (listArray (0,0) [Station 9 1 100])
+emptySector = Sector [] (listArray (0,0) [Enemy 8 3 20 10 Patrolling]) (listArray (0,0) [Station 9 1 100])
 
 newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
   deriving (Eq, Ord, Show)

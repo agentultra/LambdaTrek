@@ -10,6 +10,7 @@ import LambdaTrek.Simulation
 import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy
+import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
 import LambdaTrek.Simulation.Tile
@@ -96,7 +97,7 @@ main = hspec $ do
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do
-      let exampleEnemy = Enemy 1 1 1 0
+      let exampleEnemy = Enemy 1 1 1 0 Patrolling
       it "should return True of the enemy is in range" $ do
         enemyInRange (0, 0) (3, 3) exampleEnemy `shouldBe` True
 
@@ -105,26 +106,26 @@ main = hspec $ do
 
     describe "enemiesInRange" $ do
       let exampleEnemies = Array.listArray (0, 1)
-            [ Enemy 1 1 1 0
-            , Enemy 4 4 1 0
+            [ Enemy 1 1 1 0 Patrolling
+            , Enemy 4 4 1 0 Patrolling
             ]
       it "should return all enemies in the range" $
         enemiesInRange (0, 0) (8, 8) exampleEnemies
         `shouldBe`
-        [(0, Enemy 1 1 1 0), (1, Enemy 4 4 1 0)]
+        [(0, Enemy 1 1 1 0 Patrolling), (1, Enemy 4 4 1 0 Patrolling)]
 
       it "should return some enemies in the range" $
-        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1 0)]
+        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1 0 Patrolling)]
 
       it "should not return destroyed enemies" $ do
         let exampleDestroyedEnemies = Array.listArray (0, 2)
-              [ Enemy 1 1 1 0
-              , Enemy 4 4 1 0
-              , Enemy 2 2 0 0
+              [ Enemy 1 1 1 0 Patrolling
+              , Enemy 4 4 1 0 Patrolling
+              , Enemy 2 2 0 0 Patrolling
               ]
         enemiesInRange (0, 0) (8, 8) exampleDestroyedEnemies
           `shouldBe`
-          [(0, Enemy 1 1 1 0), (1, Enemy 4 4 1 0)]
+          [(0, Enemy 1 1 1 0 Patrolling), (1, Enemy 4 4 1 0 Patrolling)]
 
     describe "calculateEnemyPhaserDamage" $ do
       let initState = initialGameState (mkStdGen 0)
@@ -141,6 +142,7 @@ main = hspec $ do
                   , enemyPositionY = 0
                   , enemyHitPoints = 10
                   , enemyShieldValue = 0
+                  , enemyState = Patrolling
                   }
               Identity phaserDamageResult
                 = (`evalStateT` initState)
@@ -159,6 +161,7 @@ main = hspec $ do
                 , enemyPositionY = 0
                 , enemyHitPoints = 10
                 , enemyShieldValue = 5
+                , enemyState = Patrolling
                 }
               Identity phaserDamageResult
                 = (`evalStateT` initState)
@@ -176,12 +179,14 @@ main = hspec $ do
                   , enemyPositionY = 0
                   , enemyHitPoints = 10
                   , enemyShieldValue = 0
+                  , enemyState = Patrolling
                   }
               e2 = Enemy
                   { enemyPositionX = 0
                   , enemyPositionY = 0
                   , enemyHitPoints = 10
                   , enemyShieldValue = 8
+                  , enemyState = Patrolling
                   }
 
               Identity (PhaserDamageResult _ _ _ damagedE1)
@@ -204,6 +209,7 @@ main = hspec $ do
                 , enemyPositionY = 0
                 , enemyHitPoints = 10
                 , enemyShieldValue = 10
+                , enemyState = Patrolling
                 }
 
               Identity phaserDamageResult
@@ -223,6 +229,7 @@ main = hspec $ do
                 , enemyPositionY = 0
                 , enemyHitPoints = 10
                 , enemyShieldValue = 10
+                , enemyState = Patrolling
                 }
 
               Identity phaserDamageResult

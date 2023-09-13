@@ -4,6 +4,7 @@
 
 module LambdaTrek.Simulation.Enemy where
 
+import LambdaTrek.Simulation.Enemy.AI
 import Lens.Micro
 import Lens.Micro.TH
 
@@ -13,6 +14,7 @@ data Enemy
   , enemyPositionY   :: Int
   , enemyHitPoints   :: Int
   , enemyShieldValue :: Int
+  , enemyState       :: EnemyState
   }
   deriving (Eq, Ord, Show)
 
