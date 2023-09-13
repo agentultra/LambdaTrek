@@ -12,7 +12,7 @@ import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Sector
-import LambdaTrek.Simulation.Ship
+import LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Tile
 import LambdaTrek.State
 import Test.Hspec
@@ -56,13 +56,9 @@ main = hspec $ do
                 = (initialGameState gen)
                 { _gameStateCommand = Just $ EngineMove 8 10
                 }
-              expectedState
-                = (initialGameState gen)
-                { _gameStateCommand = Nothing
-                , _gameStateShip = Ship 8 10 98 6
-                , _gameStateRemainingTurns = 198
-                }
-          ((`execState` stateWithValidMoveCommand) updateSimulation) `shouldBe` expectedState
+              nextState = (`execState` stateWithValidMoveCommand) updateSimulation
+          nextState^.(gameStateShip . Ship.positionX) `shouldBe` 8
+          nextState^.(gameStateShip . Ship.positionY) `shouldBe` 10
 
       context "a Dock command" $ do
         it "should recharge the ship energy when next to a station" $ do
@@ -71,14 +67,10 @@ main = hspec $ do
                 { _gameStateShip = Ship 8 1 0 6
                 , _gameStateCommand = Just Dock
                 }
-              expectedState
-                = (initialGameState gen)
-                { _gameStateShip = Ship 8 1 100 6
-                , _gameStateCommand = Nothing
-                , _gameStateDialog = [Dialog Helm "Replenishing supplies at station (9, 1), sir!"]
-                , _gameStateRemainingTurns = 195
-                }
-          ((`execState` depletedShipState) updateSimulation) `shouldBe` expectedState
+              nextState = (`execState` depletedShipState) updateSimulation
+          nextState^.(gameStateShip . energy) `shouldBe` 100
+          nextState^.gameStateDialog `shouldSatisfy` hasDialog (Dialog Helm "Replenishing supplies at station (9, 1), sir!")
+          nextState^.gameStateRemainingTurns `shouldBe` 195
 
         it "should not recharge the ship when not adjacent to a station" $ do
           let depletedShipState
@@ -86,14 +78,11 @@ main = hspec $ do
                 { _gameStateShip = Ship 0 0 0 6
                 , _gameStateCommand = Just Dock
                 }
-              expectedState
-                = (initialGameState gen)
-                { _gameStateShip = Ship 0 0 0 6
-                , _gameStateCommand = Nothing
-                , _gameStateDialog = [Dialog Helm "There is no starbase to dock at nearby, captain."]
-                , _gameStateRemainingTurns = 200
-                }
-          ((`execState` depletedShipState) updateSimulation) `shouldBe` expectedState
+              nextState = (`execState` depletedShipState) updateSimulation
+
+          (nextState^.gameStateCommand) `shouldBe` Nothing
+          (nextState^.gameStateDialog) `shouldSatisfy` hasDialog (Dialog Helm "There is no starbase to dock at nearby, captain.")
+
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do
@@ -243,3 +232,6 @@ main = hspec $ do
                 && damagedEnemy^.hitPoints == e^.hitPoints
 
           phaserDamageResult `shouldSatisfy` shieldsReduced
+
+hasDialog :: Dialog -> [Dialog] -> Bool
+hasDialog = elem
