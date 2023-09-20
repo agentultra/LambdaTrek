@@ -19,7 +19,7 @@ turnCost = \case
   EngineMove _ _ -> 2
   JumpMove _ -> 0 -- TODO: Update when we implement JUMP
   FirePhasers _ _ -> 1
-  Dock -> 5
+  Dock -> 15
 
 -- | The result of executing a command may change state.  If it does
 -- change the state, 'Performed' indicates that game time has elapsed
