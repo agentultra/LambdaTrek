@@ -34,6 +34,7 @@ updateSimulation = do
         gameStateRemainingTurns %= flip (-) (turnCost cmd)
       gameStateCommand .= Nothing
       updateEnemyStates
+      handleEnemies
     _ -> pure ()
 
 handleCommand :: Command -> State GameState CommandResult
@@ -154,8 +155,8 @@ handleDocking = do
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
-  enemies <- use (gameStateSector . enemyShips)
-  forM_ (Array.assocs enemies) updateEnemyState
+  sector <- use gameStateSector
+  forM_ (aliveEnemies sector) updateEnemyState
 
 updateEnemyState :: (Int, Enemy) -> State GameState ()
 updateEnemyState e@(_, Enemy {..}) =
@@ -166,12 +167,39 @@ updateEnemyState e@(_, Enemy {..}) =
 updateEnemyPatrolling :: (Int, Enemy) -> State GameState ()
 updateEnemyPatrolling (enemyIx, enemy) = do
   playerShip <- use gameStateShip
-  when (inRange enemy playerShip 3) $ do
+  when (inRange enemy playerShip Enemy.enemyRange) $ do
     zoom gameStateSector $ do
       enemyShips %= \enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Fighting )]
 
 updateEnemyFighting :: (Int, Enemy) -> State GameState ()
-updateEnemyFighting _ = pure ()
+updateEnemyFighting (enemyIx, enemy) = do
+  ship <- use gameStateShip
+  unless (inRange enemy ship Enemy.enemyRange) $ do
+    zoom gameStateSector $ do
+      enemyShips %= \enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Patrolling)]
+
+handleEnemies :: State GameState ()
+handleEnemies = do
+  sector <- use gameStateSector
+  forM_ (aliveEnemies sector) handleEnemy
+
+handleEnemy :: (Int, Enemy) -> State GameState ()
+handleEnemy e@(_, Enemy {..}) = case enemyState of
+  Patrolling -> handleEnemyPatrolling e
+  Fighting -> handleEnemyFighting e
+
+handleEnemyPatrolling :: (Int, Enemy) -> State GameState ()
+handleEnemyPatrolling _ = pure ()
+
+handleEnemyFighting :: (Int, Enemy) -> State GameState ()
+handleEnemyFighting (_, enemy) = do
+  ship <- use gameStateShip
+  if inRange enemy ship Enemy.enemyRange
+    then do
+    sayDialog Combat "We took a direct hit!"
+    zoom gameStateShip $ do
+      Ship.hull %= \oldHull -> oldHull - 1
+    else pure ()
 
 class HasPosition a where
   getPosition :: a -> (Int, Int)

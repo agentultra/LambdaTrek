@@ -91,3 +91,6 @@ render sector =
      . map (Tile.render . toEnum)
      . elems
      $ sectorData
+
+aliveEnemies :: Sector -> [(Int, Enemy)]
+aliveEnemies = filter (isAlive . snd) . assocs . sectorEnemyShips

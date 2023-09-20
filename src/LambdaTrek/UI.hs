@@ -30,6 +30,7 @@ infoPanel f =
   in center . renderTable
      $ table
      [ [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
+     , [str "Hull:", str $ show (gameState^.gameStateShip.Ship.hull)]
      , [str "Remaining Turns:", str $ show (gameState^.gameStateRemainingTurns)]
      ]
 

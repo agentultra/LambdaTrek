@@ -83,7 +83,7 @@ main = hspec $ do
           (nextState^.gameStateCommand) `shouldBe` Nothing
           (nextState^.gameStateDialog) `shouldSatisfy` hasDialog (Dialog Helm "There is no starbase to dock at nearby, captain.")
 
-      xcontext "When the player ship is in range of a enemy in Fighting state" $ do
+      context "When the player ship is in range of a enemy in Fighting state" $ do
         it "should damage the player ship" $ do
           let initialState
                 = (initialGameState gen)
@@ -259,6 +259,17 @@ main = hspec $ do
             (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
         enemy^.Enemy.state `shouldBe` Patrolling
 
+      fit "should do nothing if the enemy is destroyed" $ do
+        let initialState
+              = (initialGameState gen)
+              { _gameStateShip = Ship 0 0 6 100 10
+              , _gameStateSector = emptySector { sectorEnemyShips = Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling] }
+              , _gameStateCommand = Just (EngineMove 7 3)
+              }
+            nextState = (`execState` initialState) updateSimulation
+            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+        enemy^.Enemy.state `shouldBe` Patrolling
+
       it "should change to Fighting when the player ship is in range" $ do
         let initialState
               = (initialGameState gen)
@@ -268,6 +279,23 @@ main = hspec $ do
             nextState = (`execState` initialState) updateSimulation
             (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
         enemy^.Enemy.state `shouldBe` Fighting
+
+    context "When in the Fighting state" $ do
+      it "should transition to patrolling when the player moves out of range" $ do
+        let initialState
+              = (initialGameState gen)
+              { _gameStateShip = Ship 14 14 6 100 10
+              , _gameStateCommand = Just (EngineMove 7 3)
+              }
+            nextState = (`execState` initialState) updateSimulation
+            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+        enemy^.Enemy.state `shouldBe` Fighting
+
+        let finalState = (`execState` nextState { _gameStateCommand = Just (EngineMove 14 14) }) updateSimulation
+
+            (Just enemy') = Array.elems (finalState^.gameStateSector.enemyShips) ^? ix 0
+
+        enemy'^.Enemy.state `shouldBe` Patrolling
 
 hasDialog :: Dialog -> [Dialog] -> Bool
 hasDialog = elem

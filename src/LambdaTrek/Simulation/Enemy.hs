@@ -20,8 +20,14 @@ data Enemy
 
 makeFields ''Enemy
 
+enemyRange :: Int
+enemyRange = 3
+
 isDestroyed :: Enemy -> Bool
 isDestroyed Enemy {..} = enemyHitPoints <= 0
+
+isAlive :: Enemy -> Bool
+isAlive = not . isDestroyed
 
 applyDamage :: Int -> Enemy -> Enemy
 applyDamage dmg enemy = enemy & hitPoints %~ \hp -> hp - dmg
