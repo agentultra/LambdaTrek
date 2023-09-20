@@ -33,7 +33,7 @@ updateSimulation = do
       when (commandResult == Performed) $ do
         gameStateRemainingTurns %= flip (-) (turnCost cmd)
       gameStateCommand .= Nothing
-      handleEnemies
+      updateEnemyStates
     _ -> pure ()
 
 handleCommand :: Command -> State GameState CommandResult
@@ -51,7 +51,7 @@ handleEngineMove x y = do
   didCollideWithStations <- handleStationCollisions x y
   case (didCollideWithStars, didCollideWithEnemies, didCollideWithStations) of
     (Missed, Missed, Missed) -> do
-      gameStateShip .= Ship x y (ship_^.Ship.energy - 2) (ship_^.Ship.phaserRange)
+      gameStateShip .= Ship x y (ship_^.Ship.energy - 2) (ship_^.Ship.phaserRange) (ship_^.Ship.hull)
       pure Performed
     _ -> pure Denied
 
@@ -152,26 +152,26 @@ handleDocking = do
           stationY = station^.Station.positionY
       in plusOrMinus1 shipX stationX && plusOrMinus1 shipY stationY
 
-handleEnemies :: State GameState ()
-handleEnemies = do
+updateEnemyStates :: State GameState ()
+updateEnemyStates = do
   enemies <- use (gameStateSector . enemyShips)
-  forM_ (Array.assocs enemies) handleEnemy
+  forM_ (Array.assocs enemies) updateEnemyState
 
-handleEnemy :: (Int, Enemy) -> State GameState ()
-handleEnemy e@(_, Enemy {..}) =
+updateEnemyState :: (Int, Enemy) -> State GameState ()
+updateEnemyState e@(_, Enemy {..}) =
   case enemyState of
-    Patrolling -> handleEnemyPatrolling e
-    Fighting -> handleEnemyFighting e
+    Patrolling -> updateEnemyPatrolling e
+    Fighting -> updateEnemyFighting e
 
-handleEnemyPatrolling :: (Int, Enemy) -> State GameState ()
-handleEnemyPatrolling (enemyIx, enemy) = do
+updateEnemyPatrolling :: (Int, Enemy) -> State GameState ()
+updateEnemyPatrolling (enemyIx, enemy) = do
   playerShip <- use gameStateShip
   when (inRange enemy playerShip 3) $ do
     zoom gameStateSector $ do
       enemyShips %= \enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Fighting )]
 
-handleEnemyFighting :: (Int, Enemy) -> State GameState ()
-handleEnemyFighting _ = pure ()
+updateEnemyFighting :: (Int, Enemy) -> State GameState ()
+updateEnemyFighting _ = pure ()
 
 class HasPosition a where
   getPosition :: a -> (Int, Int)

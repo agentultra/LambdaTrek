@@ -12,6 +12,7 @@ data Ship
   , shipPositionY   :: Int
   , shipEnergy      :: Int
   , shipPhaserRange :: Int -- ^ Maximum distance we can target enemies
+  , shipHull        :: Int
   }
   deriving (Eq, Ord, Show)
 

@@ -64,7 +64,7 @@ main = hspec $ do
         it "should recharge the ship energy when next to a station" $ do
           let depletedShipState
                 = (initialGameState gen)
-                { _gameStateShip = Ship 8 1 0 6
+                { _gameStateShip = Ship 8 1 0 6 10
                 , _gameStateCommand = Just Dock
                 }
               nextState = (`execState` depletedShipState) updateSimulation
@@ -75,7 +75,7 @@ main = hspec $ do
         it "should not recharge the ship when not adjacent to a station" $ do
           let depletedShipState
                 = (initialGameState gen)
-                { _gameStateShip = Ship 0 0 0 6
+                { _gameStateShip = Ship 0 0 0 6 10
                 , _gameStateCommand = Just Dock
                 }
               nextState = (`execState` depletedShipState) updateSimulation
@@ -83,6 +83,19 @@ main = hspec $ do
           (nextState^.gameStateCommand) `shouldBe` Nothing
           (nextState^.gameStateDialog) `shouldSatisfy` hasDialog (Dialog Helm "There is no starbase to dock at nearby, captain.")
 
+      xcontext "When the player ship is in range of a enemy in Fighting state" $ do
+        it "should damage the player ship" $ do
+          let initialState
+                = (initialGameState gen)
+                { _gameStateShip = Ship 0 0 100 6 10
+                , _gameStateCommand = Just $ EngineMove 7 3
+                }
+              nextState = (`execState` initialState) updateSimulation
+              (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+              initialStateShip = initialState^.gameStateShip
+              nextStateShip = nextState^.gameStateShip
+          enemy^.Enemy.state `shouldBe` Fighting
+          nextStateShip^.hull `shouldSatisfy` (< initialStateShip^.hull)
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do
@@ -239,7 +252,7 @@ main = hspec $ do
       it "should do nothing when the player ship is out of range" $ do
         let initialState
               = (initialGameState gen)
-              { _gameStateShip = Ship 0 0 6 100
+              { _gameStateShip = Ship 0 0 6 100 10
               , _gameStateCommand = Just (EngineMove 14 14)
               }
             nextState = (`execState` initialState) updateSimulation
@@ -249,7 +262,7 @@ main = hspec $ do
       it "should change to Fighting when the player ship is in range" $ do
         let initialState
               = (initialGameState gen)
-              { _gameStateShip = Ship 14 14 6 100
+              { _gameStateShip = Ship 14 14 6 100 10
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation
