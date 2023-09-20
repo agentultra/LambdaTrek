@@ -52,7 +52,14 @@ handleEngineMove x y = do
   didCollideWithStations <- handleStationCollisions x y
   case (didCollideWithStars, didCollideWithEnemies, didCollideWithStations) of
     (Missed, Missed, Missed) -> do
-      gameStateShip .= Ship x y (ship_^.Ship.energy - 2) (ship_^.Ship.phaserRange) (ship_^.Ship.hull)
+      gameStateShip .= Ship
+        { shipPositionX = x
+        , shipPositionY = y
+        , shipEnergy = ship_^.Ship.energy - 2
+        , shipPhaserRange = ship_^.Ship.phaserRange
+        , shipHull = ship_^.Ship.hull
+        , shipShieldState = ship_^.Ship.shieldState
+        }
       pure Performed
     _ -> pure Denied
 

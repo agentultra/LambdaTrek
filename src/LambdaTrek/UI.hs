@@ -31,6 +31,7 @@ infoPanel f =
      $ table
      [ [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
      , [str "Hull:", str $ show (gameState^.gameStateShip.Ship.hull)]
+     , [str "Shields:", str $ Text.unpack (Ship.shieldStateText $ gameState^.gameStateShip.Ship.shieldState)]
      , [str "Remaining Turns:", str $ show (gameState^.gameStateRemainingTurns)]
      ]
 
