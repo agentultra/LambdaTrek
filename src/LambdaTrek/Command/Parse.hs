@@ -11,6 +11,7 @@ import Data.Char
 import Data.Functor
 import Data.Text (Text)
 import LambdaTrek.Command
+import LambdaTrek.Simulation.Ship
 import LambdaTrek.Units
 import Text.ParserCombinators.ReadP
 
@@ -92,8 +93,36 @@ parseDock = do
   eof
   pure . Right $ Dock
 
+parseShieldsUp :: ReadP ShieldState
+parseShieldsUp = do
+  _ <- string "UP"
+  pure ShieldsUp
+
+parseShieldsDown :: ReadP ShieldState
+parseShieldsDown = do
+  _ <- string "DOWN"
+  pure ShieldsDown
+
+parseShieldState :: ReadP ShieldState
+parseShieldState = choice [parseShieldsUp, parseShieldsDown]
+
+parseShields :: ReadP (Either CommandParseError Command)
+parseShields = do
+  _ <- string "SHIELDS"
+  skipSpaces
+  state <- parseShieldState
+  eof
+  pure . Right $ Shields state
+
 parseCommand :: ReadP (Either CommandParseError Command)
-parseCommand = choice [parseEngineMove, parseJumpMove, parseFirePhasers, parseDock]
+parseCommand
+  = choice
+  [ parseEngineMove
+  , parseJumpMove
+  , parseFirePhasers
+  , parseDock
+  , parseShields
+  ]
 
 runCommandParser :: String -> Either CommandParseError Command
 runCommandParser = handleParseResult . readP_to_S parseCommand

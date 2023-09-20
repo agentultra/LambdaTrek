@@ -18,7 +18,7 @@ import qualified LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Station (Station (..))
 import qualified LambdaTrek.Simulation.Station as Station
-import LambdaTrek.Simulation.Ship (Ship (..))
+import LambdaTrek.Simulation.Ship (Ship (..), ShieldState (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
 import Lens.Micro
@@ -43,6 +43,7 @@ handleCommand = \case
     JumpMove _ -> pure Denied -- TODO: not implemented
     FirePhasers amt fireMode -> handleFirePhasers amt fireMode
     Dock -> handleDocking
+    Shields cmdState -> handleShields cmdState
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
@@ -161,6 +162,27 @@ handleDocking = do
           stationX = station^.Station.positionX
           stationY = station^.Station.positionY
       in plusOrMinus1 shipX stationX && plusOrMinus1 shipY stationY
+
+handleShields :: ShieldState -> State GameState CommandResult
+handleShields newState = do
+  shieldState <- use (gameStateShip . Ship.shieldState)
+  case (shieldState, newState) of
+    (ShieldsDown, ShieldsUp) -> do
+      sayDialog Combat "Raising shields, captain!"
+      zoom gameStateShip $
+        Ship.shieldState .= ShieldsUp
+      pure Performed
+    (ShieldsUp, ShieldsUp) -> do
+      sayDialog Combat "Shields are up, captain!"
+      pure Denied
+    (ShieldsDown, ShieldsDown) -> do
+      sayDialog Combat "Shields are down, captain!"
+      pure Denied
+    (ShieldsUp, ShieldsDown) -> do
+      sayDialog Combat "Lowering shields, captain!"
+      zoom gameStateShip $
+        Ship.shieldState .= ShieldsDown
+      pure Performed
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
