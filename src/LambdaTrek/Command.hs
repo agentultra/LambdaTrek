@@ -3,6 +3,7 @@
 module LambdaTrek.Command where
 
 import LambdaTrek.Units
+import LambdaTrek.Simulation.Ship
 
 data PhaserMode = PhaserAutomatic | PhaserManual
   deriving (Eq, Ord, Show)
@@ -12,6 +13,7 @@ data Command
   | JumpMove QuadrantCoord -- ^ Jump to a quadrant
   | FirePhasers Int PhaserMode
   | Dock
+  | Shields ShieldState
   deriving (Eq, Ord, Show)
 
 turnCost :: Command -> Int
@@ -20,6 +22,7 @@ turnCost = \case
   JumpMove _ -> 0 -- TODO: Update when we implement JUMP
   FirePhasers _ _ -> 1
   Dock -> 15
+  Shields _ -> 1
 
 -- | The result of executing a command may change state.  If it does
 -- change the state, 'Performed' indicates that game time has elapsed
