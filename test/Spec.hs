@@ -259,7 +259,7 @@ main = hspec $ do
             (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
         enemy^.Enemy.state `shouldBe` Patrolling
 
-      fit "should do nothing if the enemy is destroyed" $ do
+      it "should do nothing if the enemy is destroyed" $ do
         let initialState
               = (initialGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10

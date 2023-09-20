@@ -129,7 +129,9 @@ handleDocking = do
       sayDialog Helm "There is no starbase to dock at nearby, captain."
       pure Denied
     Just station -> do
-      gameStateShip . Ship.energy .= 100
+      zoom gameStateShip $ do
+        Ship.energy .= 100
+        Ship.hull .= 10
       sayDialog Helm
         ("Replenishing supplies at station ("
          <> Text.pack (show (station^.Station.positionX))
