@@ -25,6 +25,8 @@ data Ship
   , shipPhaserRange :: Int -- ^ Maximum distance we can target enemies
   , shipHull        :: Int
   , shipShieldState :: ShieldState
+  , shipShieldStrength :: Double -- ^ Between 0 and 1 representing a
+                                 -- percentage of damage reduction.
   }
   deriving (Eq, Ord, Show)
 
