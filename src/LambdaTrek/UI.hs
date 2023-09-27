@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module LambdaTrek.UI where
 
@@ -32,8 +33,14 @@ infoPanel f =
      [ [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
      , [str "Hull:", str $ show (gameState^.gameStateShip.Ship.hull)]
      , [str "Shields:", str $ Text.unpack (Ship.shieldStateText $ gameState^.gameStateShip.Ship.shieldState)]
+     , [str "Shield Strength", str $ displayShieldStrength (gameState^.gameStateShip.Ship.shieldStrength)]
      , [str "Remaining Turns:", str $ show (gameState^.gameStateRemainingTurns)]
      ]
+  where
+    displayShieldStrength :: Double -> String
+    displayShieldStrength d =
+      let amt = floor $ d * 100
+      in show @Integer amt ++ "%"
 
 commandPallet :: Form GameState e Name -> Widget Name
 commandPallet f =

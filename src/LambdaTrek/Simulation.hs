@@ -8,6 +8,7 @@ import Control.Monad.State
 import qualified Data.Array as Array
 import qualified Data.List as List
 import Data.Maybe (isJust)
+import Data.Text (Text)
 import qualified Data.Text as Text
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Combat
@@ -60,6 +61,7 @@ handleEngineMove x y = do
         , shipPhaserRange = ship_^.Ship.phaserRange
         , shipHull = ship_^.Ship.hull
         , shipShieldState = ship_^.Ship.shieldState
+        , shipShieldStrength = ship_^.Ship.shieldStrength
         }
       pure Performed
     _ -> pure Denied
@@ -228,10 +230,65 @@ handleEnemyFighting (_, enemy) = do
   ship <- use gameStateShip
   if inRange enemy ship Enemy.enemyRange
     then do
-    sayDialog Combat "We took a direct hit!"
-    zoom gameStateShip $ do
-      Ship.hull %= \oldHull -> oldHull - 1
+    extraDamage <- randomRange 0 5
+    damageResult <- damageShip $ enemy^.Enemy.baseDamageAmount + extraDamage
+    generateShipDamageDialog damageResult
     else pure ()
+
+data DamageResult
+  = DamageResult
+  { damageResultHullDamageAmount :: Int
+  , damageResultIsDirectHit      :: Bool
+  }
+  deriving (Eq, Show)
+
+damageShip :: Int -> State GameState DamageResult
+damageShip amount = do
+  ship <- use gameStateShip
+  case ship^.Ship.shieldState of
+    ShieldsUp -> do
+      let shieldReducedDamageAmount =
+            fromIntegral amount * ship^.Ship.shieldStrength
+          hullDamageAmount = ceiling
+            $ fromIntegral amount - shieldReducedDamageAmount
+      zoom gameStateShip $ do
+        Ship.hull -= hullDamageAmount
+        Ship.shieldStrength -= 0.02
+      pure $ DamageResult
+        { damageResultHullDamageAmount = hullDamageAmount
+        , damageResultIsDirectHit = False
+        }
+    ShieldsDown -> do
+      zoom gameStateShip $
+        Ship.hull -= amount
+      pure $ DamageResult
+        { damageResultHullDamageAmount = amount
+        , damageResultIsDirectHit = True
+        }
+
+generateShipDamageDialog :: DamageResult -> State GameState ()
+generateShipDamageDialog DamageResult {..} = do
+  ship <- use gameStateShip
+  if damageResultIsDirectHit
+    then sayDialog Combat
+         $ "We took a direct hit, captain! We lost "
+         <> damageAmount damageResultHullDamageAmount
+         <> " damage!"
+    else
+    case ship^.Ship.shieldState of
+      ShieldsUp ->
+        sayDialog Combat
+        $ "Shields holding, we took "
+        <> damageAmount damageResultHullDamageAmount
+        <> " damage!"
+      ShieldsDown ->
+        sayDialog Combat "We lost shields, captain! Taking damage!"
+  where
+    damageAmount :: Int -> Text
+    damageAmount amt
+      | amt <= 10 = "a little"
+      | amt > 10 && amt <= 40 = "some"
+      | otherwise = "a lot of"
 
 class HasPosition a where
   getPosition :: a -> (Int, Int)

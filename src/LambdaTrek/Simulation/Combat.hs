@@ -122,3 +122,10 @@ randomPhaserFactor = do
   let (f, gen') = randomR (0.9, 1.1) gen
   gameStateRandomGen .= gen'
   pure f
+
+randomRange :: Int -> Int -> State GameState Int
+randomRange lo hi = do
+  gen <- use gameStateRandomGen
+  let (x, gen') = randomR (lo, hi) gen
+  gameStateRandomGen .= gen'
+  pure x
