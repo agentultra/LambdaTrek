@@ -114,6 +114,14 @@ parseShields = do
   eof
   pure . Right $ Shields state
 
+parseTransfer :: ReadP (Either CommandParseError Command)
+parseTransfer = do
+  _ <- string "TRANSFER"
+  skipSpaces
+  amt <- digit
+  eof
+  pure . Right $ Transfer amt
+
 parseCommand :: ReadP (Either CommandParseError Command)
 parseCommand
   = choice
@@ -122,6 +130,7 @@ parseCommand
   , parseFirePhasers
   , parseDock
   , parseShields
+  , parseTransfer
   ]
 
 runCommandParser :: String -> Either CommandParseError Command

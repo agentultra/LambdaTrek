@@ -45,6 +45,7 @@ handleCommand = \case
     FirePhasers amt fireMode -> handleFirePhasers amt fireMode
     Dock -> handleDocking
     Shields cmdState -> handleShields cmdState
+    Transfer amt -> handleTransfer amt
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
@@ -186,6 +187,11 @@ handleShields newState = do
       zoom gameStateShip $
         Ship.shieldState .= ShieldsDown
       pure Performed
+
+handleTransfer :: Int -> State GameState CommandResult
+handleTransfer amt = do
+  sayDialog Engineering $ "Transferring " <> Text.pack (show amt) <> " to shields! Aye!"
+  pure Performed
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
