@@ -100,7 +100,7 @@ main = hspec $ do
 
   describe "LambdaTrek.Simulation.Combat" $ do
     describe "enemyInRange" $ do
-      let exampleEnemy = Enemy 1 1 1 0 Patrolling
+      let exampleEnemy = Enemy 1 1 1 0 Patrolling 10
       it "should return True of the enemy is in range" $ do
         enemyInRange (0, 0) (3, 3) exampleEnemy `shouldBe` True
 
@@ -109,26 +109,26 @@ main = hspec $ do
 
     describe "enemiesInRange" $ do
       let exampleEnemies = Array.listArray (0, 1)
-            [ Enemy 1 1 1 0 Patrolling
-            , Enemy 4 4 1 0 Patrolling
+            [ Enemy 1 1 1 0 Patrolling 10
+            , Enemy 4 4 1 0 Patrolling 10
             ]
       it "should return all enemies in the range" $
         enemiesInRange (0, 0) (8, 8) exampleEnemies
         `shouldBe`
-        [(0, Enemy 1 1 1 0 Patrolling), (1, Enemy 4 4 1 0 Patrolling)]
+        [(0, Enemy 1 1 1 0 Patrolling 10), (1, Enemy 4 4 1 0 Patrolling 10)]
 
       it "should return some enemies in the range" $
-        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1 0 Patrolling)]
+        enemiesInRange (0, 0) (2, 2) exampleEnemies `shouldBe` [(0, Enemy 1 1 1 0 Patrolling 10)]
 
       it "should not return destroyed enemies" $ do
         let exampleDestroyedEnemies = Array.listArray (0, 2)
-              [ Enemy 1 1 1 0 Patrolling
-              , Enemy 4 4 1 0 Patrolling
-              , Enemy 2 2 0 0 Patrolling
+              [ Enemy 1 1 1 0 Patrolling 10
+              , Enemy 4 4 1 0 Patrolling 10
+              , Enemy 2 2 0 0 Patrolling 10
               ]
         enemiesInRange (0, 0) (8, 8) exampleDestroyedEnemies
           `shouldBe`
-          [(0, Enemy 1 1 1 0 Patrolling), (1, Enemy 4 4 1 0 Patrolling)]
+          [(0, Enemy 1 1 1 0 Patrolling 10), (1, Enemy 4 4 1 0 Patrolling 10)]
 
     describe "calculateEnemyPhaserDamage" $ do
       let initState = initialGameState (mkStdGen 0)
@@ -146,6 +146,7 @@ main = hspec $ do
                   , enemyHitPoints = 10
                   , enemyShieldValue = 0
                   , enemyState = Patrolling
+                  , enemyBaseDamageAmount = 10
                   }
               Identity phaserDamageResult
                 = (`evalStateT` initState)
@@ -165,6 +166,7 @@ main = hspec $ do
                 , enemyHitPoints = 10
                 , enemyShieldValue = 5
                 , enemyState = Patrolling
+                , enemyBaseDamageAmount = 10
                 }
               Identity phaserDamageResult
                 = (`evalStateT` initState)
@@ -183,6 +185,7 @@ main = hspec $ do
                   , enemyHitPoints = 10
                   , enemyShieldValue = 0
                   , enemyState = Patrolling
+                  , enemyBaseDamageAmount = 10
                   }
               e2 = Enemy
                   { enemyPositionX = 0
@@ -190,6 +193,7 @@ main = hspec $ do
                   , enemyHitPoints = 10
                   , enemyShieldValue = 8
                   , enemyState = Patrolling
+                  , enemyBaseDamageAmount = 10
                   }
 
               Identity (PhaserDamageResult _ _ _ damagedE1)
@@ -213,6 +217,7 @@ main = hspec $ do
                 , enemyHitPoints = 10
                 , enemyShieldValue = 10
                 , enemyState = Patrolling
+                , enemyBaseDamageAmount = 10
                 }
 
               Identity phaserDamageResult
@@ -233,6 +238,7 @@ main = hspec $ do
                 , enemyHitPoints = 10
                 , enemyShieldValue = 10
                 , enemyState = Patrolling
+                , enemyBaseDamageAmount = 10
                 }
 
               Identity phaserDamageResult
@@ -264,7 +270,7 @@ main = hspec $ do
         let initialState
               = (initialGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75
-              , _gameStateSector = emptySector { sectorEnemyShips = Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling] }
+              , _gameStateSector = emptySector { sectorEnemyShips = Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10] }
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation

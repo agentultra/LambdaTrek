@@ -109,23 +109,12 @@ enemiesInRange rangeBoxCorner rangeBoxOffset
       ]
 
 generateDamageDialog :: Int -> Enemy -> Text
-generateDamageDialog amt Enemy {..}
-#ifdef DEBUG
-  = "Damaged enemy ship ("
-  <> (T.pack . show $ enemyPositionX)
-  <> ", "
-  <> (T.pack . show $ enemyPositionY)
-  <> ") for "
-  <> (T.pack . show $ amt)
-  <> "ENEMY: "
-  <> (T.pack . show $ (enmy^.Enemy.hitPoints, enmy^.Enemy.shieldValue))
-#else
+generateDamageDialog amt _
   | amt <= 0 = "Weapons did not make contact, sir!"
   | amt < 20 = "Minimal damage, sir."
   | amt < 30 = "We hit the enemy ship, sir."
   | amt < 50 = "A direct hit, captain!"
   | amt > 50 = "The enemy has taken a heavy blow, captain!"
-#endif
 
 randomPhaserFactor :: State GameState Float
 randomPhaserFactor = do

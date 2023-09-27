@@ -10,11 +10,12 @@ import Lens.Micro.TH
 
 data Enemy
   = Enemy
-  { enemyPositionX   :: Int
-  , enemyPositionY   :: Int
-  , enemyHitPoints   :: Int
-  , enemyShieldValue :: Int
-  , enemyState       :: EnemyState
+  { enemyPositionX        :: Int
+  , enemyPositionY        :: Int
+  , enemyHitPoints        :: Int
+  , enemyShieldValue      :: Int
+  , enemyState            :: EnemyState
+  , enemyBaseDamageAmount :: Int
   }
   deriving (Eq, Ord, Show)
 
