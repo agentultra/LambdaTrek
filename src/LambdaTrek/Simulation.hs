@@ -165,12 +165,13 @@ handleDocking = do
 
 handleShields :: ShieldState -> State GameState CommandResult
 handleShields newState = do
-  shieldState <- use (gameStateShip . Ship.shieldState)
-  case (shieldState, newState) of
+  priorShieldState <- use (gameStateShip . Ship.shieldState)
+  case (priorShieldState, newState) of
     (ShieldsDown, ShieldsUp) -> do
       sayDialog Combat "Raising shields, captain!"
-      zoom gameStateShip $
+      zoom gameStateShip $ do
         Ship.shieldState .= ShieldsUp
+        Ship.energy -= 50
       pure Performed
     (ShieldsUp, ShieldsUp) -> do
       sayDialog Combat "Shields are up, captain!"
