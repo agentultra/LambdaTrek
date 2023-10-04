@@ -19,14 +19,15 @@ shieldStateText = \case
 
 data Ship
   = Ship
-  { shipPositionX   :: Int
-  , shipPositionY   :: Int
-  , shipEnergy      :: Int
-  , shipPhaserRange :: Int -- ^ Maximum distance we can target enemies
-  , shipHull        :: Int
-  , shipShieldState :: ShieldState
+  { shipPositionX      :: Int
+  , shipPositionY      :: Int
+  , shipEnergy         :: Int
+  , shipPhaserRange    :: Int -- ^ Maximum distance we can target enemies
+  , shipHull           :: Int
+  , shipShieldState    :: ShieldState
   , shipShieldStrength :: Double -- ^ Between 0 and 1 representing a
                                  -- percentage of damage reduction.
+  , shipTorpedos       :: Int
   }
   deriving (Eq, Ord, Show)
 

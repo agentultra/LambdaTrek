@@ -65,7 +65,7 @@ main = hspec $ do
         it "should recharge the ship energy when next to a station" $ do
           let depletedShipState
                 = (initialGameState gen)
-                { _gameStateShip = Ship 8 1 0 6 10 ShieldsDown 0.75
+                { _gameStateShip = Ship 8 1 0 6 10 ShieldsDown 0.75 5
                 , _gameStateCommand = Just Dock
                 }
               nextState = (`execState` depletedShipState) updateSimulation
@@ -76,7 +76,7 @@ main = hspec $ do
         it "should not recharge the ship when not adjacent to a station" $ do
           let depletedShipState
                 = (initialGameState gen)
-                { _gameStateShip = Ship 0 0 0 6 10 ShieldsDown 0.75
+                { _gameStateShip = Ship 0 0 0 6 10 ShieldsDown 0.75 5
                 , _gameStateCommand = Just Dock
                 }
               nextState = (`execState` depletedShipState) updateSimulation
@@ -88,7 +88,7 @@ main = hspec $ do
         it "should damage the player ship" $ do
           let initialState
                 = (initialGameState gen)
-                { _gameStateShip = Ship 0 0 100 6 10 ShieldsDown 0.75
+                { _gameStateShip = Ship 0 0 100 6 10 ShieldsDown 0.75 5
                 , _gameStateCommand = Just $ EngineMove 7 3
                 }
               nextState = (`execState` initialState) updateSimulation
@@ -259,7 +259,7 @@ main = hspec $ do
       it "should do nothing when the player ship is out of range" $ do
         let initialState
               = (initialGameState gen)
-              { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75
+              { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5
               , _gameStateCommand = Just (EngineMove 14 14)
               }
             nextState = (`execState` initialState) updateSimulation
@@ -269,7 +269,7 @@ main = hspec $ do
       it "should do nothing if the enemy is destroyed" $ do
         let initialState
               = (initialGameState gen)
-              { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75
+              { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5
               , _gameStateSector = emptySector { sectorEnemyShips = Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10] }
               , _gameStateCommand = Just (EngineMove 7 3)
               }
@@ -280,7 +280,7 @@ main = hspec $ do
       it "should change to Fighting when the player ship is in range" $ do
         let initialState
               = (initialGameState gen)
-              { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75
+              { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75 5
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation
@@ -291,7 +291,7 @@ main = hspec $ do
       it "should transition to patrolling when the player moves out of range" $ do
         let initialState
               = (initialGameState gen)
-              { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75
+              { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75 5
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation

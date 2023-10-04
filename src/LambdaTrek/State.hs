@@ -42,7 +42,7 @@ initialGameState gen
   , _gameStateCommand = Nothing
   , _gameStateCommandError = Nothing
   , _gameStateSector = emptySector & stars .~ [(10, 10)]
-  , _gameStateShip = Ship 2 2 100 6 10 ShieldsDown 0.75
+  , _gameStateShip = Ship 2 2 100 6 10 ShieldsDown 0.75 5
   , _gameStateRemainingTurns = 200
   , _gameStateDialog = []
   , _gameStateRandomGen = gen
