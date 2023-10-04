@@ -16,6 +16,8 @@ data Command
   | Shields ShieldState
   | Transfer Int
     -- ^ Transfer X amount of energy to the shields to raise shield strength
+  | FireTorpedo Int [(Int, Int)]
+    -- ^ Fire X number of torpedos at specified targets, one target per torpedo
   deriving (Eq, Ord, Show)
 
 turnCost :: Command -> Int
@@ -26,6 +28,7 @@ turnCost = \case
   Dock -> 15
   Shields _ -> 1
   Transfer _ -> 1
+  FireTorpedo _ _ -> 1
 
 -- | The result of executing a command may change state.  If it does
 -- change the state, 'Performed' indicates that game time has elapsed

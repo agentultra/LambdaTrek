@@ -96,6 +96,11 @@ getEnemiesInPhaserRange = do
       rangeBoxOffset = (shipPhaserRange, shipPhaserRange)
   pure . enemiesInRange rangeBoxCorner rangeBoxOffset $ sector^.enemyShips
 
+handleFireTorpedo :: State GameState CommandResult
+handleFireTorpedo = do
+  sayDialog Combat "Firing torpedos, aye!"
+  pure Denied
+
 enemyInRange :: (Int, Int) -> (Int, Int) -> Enemy -> Bool
 enemyInRange (topLeftX, topLeftY) (offSetX, offSetY) Enemy {..} =
   enemyPositionX >= topLeftX

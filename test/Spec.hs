@@ -4,6 +4,7 @@
 
 import Control.Monad.State
 import qualified Data.Array as Array
+import Data.Either
 import Data.Functor.Identity
 import LambdaTrek.Command
 import LambdaTrek.Command.Parse
@@ -30,6 +31,16 @@ main = hspec $ do
       runCommandParser "MOV 100 100"
         `shouldBe`
         (Left $ InvalidEngineMove "Invalid move: X and Y must be from 0 to 14")
+
+    it "should parse TORPEDO command with 1 target" $ do
+      runCommandParser "TORPEDO 1 1 1"
+        `shouldSatisfy`
+        isRight
+
+    it "should parse TORPEDO command with 2 targets" $ do
+      runCommandParser "TORPEDO 2 1 1 2 2"
+        `shouldBe`
+        (Right $ FireTorpedo 2 [(1, 1), (2, 2)])
 
   describe "LambdaTrek.Simulation" $ do
     describe "LambdaTrek.Simulation.Sector" $ do

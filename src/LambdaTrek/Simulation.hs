@@ -46,6 +46,7 @@ handleCommand = \case
     Dock -> handleDocking
     Shields cmdState -> handleShields cmdState
     Transfer amt -> handleTransfer amt
+    FireTorpedo _ _ -> handleFireTorpedo
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do

@@ -24,9 +24,7 @@ parseEngineMove :: ReadP (Either CommandParseError Command)
 parseEngineMove = do
   _ <- string "MOV"
   skipSpaces
-  x <- digit
-  skipSpaces
-  y <- digit
+  (x, y) <- parseCoordinate
   eof
   if x < 0 || x > 14 || y < 0 || y > 14
     then pure
@@ -122,6 +120,33 @@ parseTransfer = do
   eof
   pure . Right $ Transfer amt
 
+parseCoordinate :: ReadP (Int, Int)
+parseCoordinate = do
+  x <- digit
+  skipSpaces
+  y <- digit
+  pure (x, y)
+
+parseCoordinates :: ReadP [(Int, Int)]
+parseCoordinates = sepBy1 parseCoordinate skipSpaces <* eof
+
+parseTorpedo :: ReadP (Either CommandParseError Command)
+parseTorpedo = do
+  _ <- string "TORPEDO"
+  skipSpaces
+  amt <- digit
+  skipSpaces
+  coords <- parseCoordinates
+  if amt < 0 || amt > 3
+    then pure
+         . Left
+         $ InvalidFireTorpedo "Number of torpedos must be 0 > x <= 3"
+    else if length coords /= amt
+    then pure
+         . Left
+         $ InvalidFireTorpedo "Number of coordinates must match number of torpoedos"
+    else pure . Right $ FireTorpedo amt coords
+
 parseCommand :: ReadP (Either CommandParseError Command)
 parseCommand
   = choice
@@ -131,6 +156,7 @@ parseCommand
   , parseDock
   , parseShields
   , parseTransfer
+  , parseTorpedo
   ]
 
 runCommandParser :: String -> Either CommandParseError Command
@@ -144,9 +170,11 @@ runCommandParser = handleParseResult . readP_to_S parseCommand
 
 data CommandParseError
   = InvalidEngineMove Text
+  | InvalidFireTorpedo Text
   | NoCommand
   deriving (Eq, Show)
 
 renderCommandParseError :: CommandParseError -> Text
 renderCommandParseError (InvalidEngineMove msg) = msg
+renderCommandParseError (InvalidFireTorpedo msg) = msg
 renderCommandParseError NoCommand = "No command"
