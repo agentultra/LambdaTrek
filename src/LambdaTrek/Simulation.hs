@@ -190,7 +190,12 @@ handleShields newState = do
 
 handleTransfer :: Int -> State GameState CommandResult
 handleTransfer amt = do
-  sayDialog Engineering $ "Transferring " <> Text.pack (show amt) <> " to shields! Aye!"
+  let transferAmount = fromIntegral amt * (0.01 :: Double)
+  zoom gameStateShip $ do
+    Ship.shieldStrength %= (+ transferAmount)
+  sayDialog Engineering
+    $ "Increasing shields by " <> Text.pack (show amt)
+    <> "% Aye!"
   pure Performed
 
 updateEnemyStates :: State GameState ()
