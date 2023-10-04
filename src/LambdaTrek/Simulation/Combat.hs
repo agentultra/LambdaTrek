@@ -29,7 +29,13 @@ handleFirePhasers energyAmt firingMode = do
     LT -> do
       sayDialog Combat "We don't have that much energy to fire the phasers, sir!"
       pure Denied
-    _ -> doFire energyAmt enemies firingMode
+    _ -> case playerShip^.Ship.shieldState of
+      Ship.ShieldsUp -> do
+        sayDialog Combat
+          $ "Shields are up captain, we must first lower "
+          <> "the shields in order to fire phasers."
+        pure Denied
+      Ship.ShieldsDown -> doFire energyAmt enemies firingMode
 
 doFire :: Int -> [(Int, Enemy)] -> PhaserMode -> State GameState CommandResult
 doFire energyAmt enemies PhaserAutomatic = do
@@ -110,11 +116,11 @@ enemiesInRange rangeBoxCorner rangeBoxOffset
 
 generateDamageDialog :: Int -> Enemy -> Text
 generateDamageDialog amt _
-  | amt <= 0 = "Weapons did not make contact, sir!"
-  | amt < 20 = "Minimal damage, sir."
-  | amt < 30 = "We hit the enemy ship, sir."
-  | amt < 50 = "A direct hit, captain!"
-  | amt > 50 = "The enemy has taken a heavy blow, captain!"
+  | amt <= 0  = "Weapons did not make contact, sir!"
+  | amt < 20  = "Minimal damage, sir."
+  | amt < 30  = "We hit the enemy ship, sir."
+  | amt < 50  = "A direct hit, captain!"
+  | otherwise = "The enemy has taken a heavy blow, captain!"
 
 randomPhaserFactor :: State GameState Float
 randomPhaserFactor = do
