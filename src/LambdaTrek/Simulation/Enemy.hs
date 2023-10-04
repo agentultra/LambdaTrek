@@ -35,3 +35,6 @@ applyDamage dmg enemy = enemy & hitPoints %~ \hp -> hp - dmg
 
 applyDamageToShields :: Int -> Enemy -> Enemy
 applyDamageToShields dmg enemy = enemy & shieldValue %~ \sv -> max 0 (sv - dmg)
+
+destroyEnemy :: Enemy -> Enemy
+destroyEnemy enemy = enemy { enemyHitPoints = 0 }

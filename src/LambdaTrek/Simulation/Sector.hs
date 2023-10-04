@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Sector where
 
 import Data.Array
-import Data.List (foldl')
+import Data.List (foldl', find)
 import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -94,3 +95,13 @@ render sector =
 
 aliveEnemies :: Sector -> [(Int, Enemy)]
 aliveEnemies = filter (isAlive . snd) . assocs . sectorEnemyShips
+
+enemyAtCoord :: (Int, Int) -> Sector -> Maybe (Int, Enemy)
+enemyAtCoord coord
+  = find (isAtCoordinate coord . snd)
+  . assocs
+  . sectorEnemyShips
+  where
+    isAtCoordinate :: (Int, Int) -> Enemy -> Bool
+    isAtCoordinate (coordX, coordY) Enemy {..} =
+      coordX == enemyPositionX && coordY == enemyPositionY

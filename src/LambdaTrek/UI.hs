@@ -33,7 +33,8 @@ infoPanel f =
      [ [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
      , [str "Hull:", str $ show (gameState^.gameStateShip.Ship.hull)]
      , [str "Shields:", str $ Text.unpack (Ship.shieldStateText $ gameState^.gameStateShip.Ship.shieldState)]
-     , [str "Shield Strength", str $ displayShieldStrength (gameState^.gameStateShip.Ship.shieldStrength)]
+     , [str "Shield Strength:", str $ displayShieldStrength (gameState^.gameStateShip.Ship.shieldStrength)]
+     , [str "Torpedos:", str $ show (gameState^.gameStateShip.Ship.torpedos)]
      , [str "Remaining Turns:", str $ show (gameState^.gameStateRemainingTurns)]
      ]
   where

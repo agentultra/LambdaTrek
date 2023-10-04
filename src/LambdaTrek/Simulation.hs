@@ -46,7 +46,7 @@ handleCommand = \case
     Dock -> handleDocking
     Shields cmdState -> handleShields cmdState
     Transfer amt -> handleTransfer amt
-    FireTorpedo _ _ -> handleFireTorpedo
+    FireTorpedo num coords -> handleFireTorpedo num coords
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
@@ -64,6 +64,7 @@ handleEngineMove x y = do
         , shipHull = ship_^.Ship.hull
         , shipShieldState = ship_^.Ship.shieldState
         , shipShieldStrength = ship_^.Ship.shieldStrength
+        , shipTorpedos = ship_^.Ship.torpedos
         }
       pure Performed
     _ -> pure Denied

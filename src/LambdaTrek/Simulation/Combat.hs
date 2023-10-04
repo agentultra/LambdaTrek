@@ -8,6 +8,7 @@ import Control.Monad.State
 import Data.Array
 import qualified Data.Array as Array
 import Data.Text (Text)
+import qualified Data.Text as T
 import LambdaTrek.Command
 import LambdaTrek.List (allp)
 import LambdaTrek.State
@@ -96,10 +97,34 @@ getEnemiesInPhaserRange = do
       rangeBoxOffset = (shipPhaserRange, shipPhaserRange)
   pure . enemiesInRange rangeBoxCorner rangeBoxOffset $ sector^.enemyShips
 
-handleFireTorpedo :: State GameState CommandResult
-handleFireTorpedo = do
-  sayDialog Combat "Firing torpedos, aye!"
-  pure Denied
+handleFireTorpedo :: Int -> [(Int, Int)] -> State GameState CommandResult
+handleFireTorpedo num coords = do
+  ship <- use gameStateShip
+  sector <- use gameStateSector
+  case compare num (ship^.Ship.torpedos) of
+    GT -> do
+      sayDialog Combat
+        $ "Cannot fire torpedos! We only have "
+        <> T.pack (show $ ship^.Ship.torpedos)
+        <> " torpedos left, captain."
+      pure Denied
+    _ -> do
+      sayDialog Combat "Aye, firing torpedos"
+      forM_ coords $ \coord -> do
+        case enemyAtCoord coord sector of
+          Nothing -> do
+            sayDialog Combat
+              $ "Torpedo detonated at "
+              <> T.pack (show coord)
+              <> " in empty space!"
+          Just (enemyIx, enemy) -> do
+            sayDialog Combat "Enemy hit, sir!"
+            let damagedEnemy = Enemy.destroyEnemy enemy
+            zoom gameStateSector $
+              enemyShips %= \ships -> ships Array.// [(enemyIx, damagedEnemy)]
+      zoom gameStateShip $
+        Ship.torpedos %= \currentAmt -> currentAmt - num
+      pure Performed
 
 enemyInRange :: (Int, Int) -> (Int, Int) -> Enemy -> Bool
 enemyInRange (topLeftX, topLeftY) (offSetX, offSetY) Enemy {..} =
