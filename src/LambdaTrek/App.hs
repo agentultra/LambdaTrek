@@ -70,6 +70,6 @@ lambdaAttrMap _ = attrMap defAttr
 checkForGameOver :: GameState -> GameState
 checkForGameOver gameState =
   let ship = gameState^.gameStateShip
-  in if ship^.energy <= 0
+  in if ship^.energy <= 0 || ship^.hull <= 0
      then gameState & gameStateScreen .~ GameOverScreen
      else gameState
