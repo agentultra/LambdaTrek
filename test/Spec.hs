@@ -6,6 +6,7 @@ import Control.Monad.State
 import qualified Data.Array as Array
 import Data.Either
 import Data.Functor.Identity
+import qualified Data.Map as M
 import LambdaTrek.Command
 import LambdaTrek.Command.Parse
 import LambdaTrek.Simulation
@@ -13,6 +14,7 @@ import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Enemy.AI
+import LambdaTrek.Simulation.Quadrant
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Tile
@@ -278,10 +280,12 @@ main = hspec $ do
         enemy^.Enemy.state `shouldBe` Patrolling
 
       it "should do nothing if the enemy is destroyed" $ do
+        -- emptySector { sectorEnemyShips =  }
         let initialState
               = (initialGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5
-              , _gameStateSector = emptySector { sectorEnemyShips = Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10] }
+              , _gameStateQuadrant = initQuadrant { _quadrantEnemyShips = M.singleton (0, 0) (Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10]) }
+              , _gameStateSector = (0, 0)
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation

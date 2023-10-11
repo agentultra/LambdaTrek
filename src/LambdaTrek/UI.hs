@@ -15,6 +15,7 @@ import qualified Data.Text as Text
 import qualified Graphics.Vty.Attributes as Vty
 import qualified Graphics.Vty.Image as Vty
 import LambdaTrek.Simulation.Dialog
+import qualified LambdaTrek.Simulation.Quadrant as Quadrant
 import qualified LambdaTrek.Simulation.Sector as Sector
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
@@ -73,7 +74,7 @@ sectorDialog gameState = withVScrollBars OnRight . viewport SectorDialog Vertica
 
 sectorDisplay :: GameState -> Widget Name
 sectorDisplay gameState =
-  let sector = gameState^.gameStateSector
+  let sector = Quadrant.getSector (gameState^.gameStateQuadrant) $ gameState^.gameStateSector
       ship = gameState^.gameStateShip
       sectorTiles = Sector.buildSectorTiles ship sector
   in (center . str . Text.unpack . Sector.render $ sectorTiles)

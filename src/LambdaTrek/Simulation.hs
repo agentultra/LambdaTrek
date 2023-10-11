@@ -7,6 +7,8 @@ module LambdaTrek.Simulation where
 import Control.Monad.State
 import qualified Data.Array as Array
 import qualified Data.List as List
+import Data.Map ((!))
+import qualified Data.Map as M
 import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -17,6 +19,7 @@ import LambdaTrek.Simulation.Enemy (Enemy (..))
 import LambdaTrek.Simulation.Enemy.AI
 import qualified LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Sector
+import qualified LambdaTrek.Simulation.Quadrant as Q
 import LambdaTrek.Simulation.Station (Station (..))
 import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Ship (Ship (..), ShieldState (..))
@@ -73,7 +76,9 @@ data CollisionResult = Collide | Missed deriving (Eq, Show)
 
 handleStarCollisions :: Int -> Int -> State GameState CollisionResult
 handleStarCollisions x y = do
-  stars_ <- use (gameStateSector . stars)
+  quadrantStarMap <- use (gameStateQuadrant . Q.quadrantStars)
+  currentSector <- use gameStateSector
+  let stars_ = quadrantStarMap ! currentSector
   if collidesWithStars stars_ x y
     then do
     sayDialog Helm
@@ -88,7 +93,9 @@ handleStarCollisions x y = do
 
 handleEnemyCollisions :: Int -> Int -> State GameState CollisionResult
 handleEnemyCollisions x y = do
-  enemies_ <- use (gameStateSector . enemyShips)
+  quadrantEnemyShipMap <- use (gameStateQuadrant . Q.quadrantEnemyShips)
+  currentSector <- use gameStateSector
+  let enemies_ = quadrantEnemyShipMap ! currentSector
   case collidesWithEnemies (Array.elems enemies_) x y of
     Just e | Enemy.isDestroyed e -> do
                sayDialog Helm
@@ -115,7 +122,9 @@ handleEnemyCollisions x y = do
 
 handleStationCollisions :: Int -> Int -> State GameState CollisionResult
 handleStationCollisions x y = do
-  stations_ <- use (gameStateSector . stations)
+  quadrantStationMap <- use (gameStateQuadrant . Q.quadrantStations)
+  currentSector <- use gameStateSector
+  let stations_ = quadrantStationMap ! currentSector
   case collidesWithStations (Array.elems stations_) x y of
     Just _ -> do
       sayDialog Helm
@@ -157,7 +166,9 @@ handleDocking = do
     findStation :: State GameState (Maybe Station)
     findStation = do
       ship <- use gameStateShip
-      sectorStations' <- Array.elems <$> use (gameStateSector . stations)
+      quadrantStationMap <- use (gameStateQuadrant . Q.quadrantStations)
+      currentSector <- use gameStateSector
+      let sectorStations' = Array.elems (quadrantStationMap ! currentSector)
       pure . List.find (isAdjacent ship) $ sectorStations'
 
     isAdjacent :: Ship -> Station -> Bool
@@ -202,7 +213,7 @@ handleTransfer amt = do
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
-  sector <- use gameStateSector
+  sector <- getCurrentSector
   forM_ (aliveEnemies sector) updateEnemyState
 
 updateEnemyState :: (Int, Enemy) -> State GameState ()
@@ -214,20 +225,24 @@ updateEnemyState e@(_, Enemy {..}) =
 updateEnemyPatrolling :: (Int, Enemy) -> State GameState ()
 updateEnemyPatrolling (enemyIx, enemy) = do
   playerShip <- use gameStateShip
+  currentSector <- use gameStateSector
   when (inRange enemy playerShip Enemy.enemyRange) $ do
-    zoom gameStateSector $ do
-      enemyShips %= \enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Fighting )]
+    zoom gameStateQuadrant $ do
+      Q.quadrantEnemyShips %= \enemyShipMap ->
+        M.adjust (\enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Fighting )]) currentSector enemyShipMap
 
 updateEnemyFighting :: (Int, Enemy) -> State GameState ()
 updateEnemyFighting (enemyIx, enemy) = do
+  currentSector <- use gameStateSector
   ship <- use gameStateShip
   unless (inRange enemy ship Enemy.enemyRange) $ do
-    zoom gameStateSector $ do
-      enemyShips %= \enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Patrolling)]
+    zoom gameStateQuadrant $ do
+      Q.quadrantEnemyShips %= \enemyShipMap ->
+        M.adjust (\enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Patrolling)]) currentSector enemyShipMap
 
 handleEnemies :: State GameState ()
 handleEnemies = do
-  sector <- use gameStateSector
+  sector <- getCurrentSector
   forM_ (aliveEnemies sector) handleEnemy
 
 handleEnemy :: (Int, Enemy) -> State GameState ()
@@ -311,6 +326,12 @@ instance HasPosition Enemy where
 
 instance HasPosition Ship where
   getPosition Ship {..} = (shipPositionX, shipPositionY)
+
+getCurrentSector :: State GameState Sector
+getCurrentSector = do
+  quadrant <- use gameStateQuadrant
+  currentSector <- use gameStateSector
+  pure $ Q.getSector quadrant currentSector
 
 inRange :: (HasPosition a , HasPosition b) => a -> b -> Int -> Bool
 inRange a b range =

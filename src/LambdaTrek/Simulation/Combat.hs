@@ -7,6 +7,7 @@ module LambdaTrek.Simulation.Combat where
 import Control.Monad.State
 import Data.Array
 import qualified Data.Array as Array
+import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
 import LambdaTrek.Command
@@ -15,6 +16,7 @@ import LambdaTrek.State
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy (Enemy (..))
 import qualified LambdaTrek.Simulation.Enemy as Enemy
+import qualified LambdaTrek.Simulation.Quadrant as Q
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship (Ship (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
@@ -43,8 +45,10 @@ doFire energyAmt enemies PhaserAutomatic = do
   let energyAmount = energyAmt `div` length enemies
   damagedEnemies <- mapM (calculateEnemyPhaserDamage energyAmount) enemies
   gameStateShip %= Ship.subtractEnergy (energyAmount * length damagedEnemies)
-  gameStateSector . enemyShips %= \ships ->
-    ships Array.// map resultToEnemyIx damagedEnemies
+  currentSector <- use gameStateSector
+  zoom gameStateQuadrant $ do
+    Q.quadrantEnemyShips %= \enemyShipMap ->
+      M.adjust (\ships -> ships Array.// map resultToEnemyIx damagedEnemies) currentSector enemyShipMap
   x <- forM damagedEnemies $ \PhaserDamageResult {..} ->
     if Enemy.isDestroyed _phaserDamageReportEnemy
     then sayDialog Combat "Enemy ship destroyed, captain!"
@@ -91,8 +95,10 @@ calculateEnemyPhaserDamage amt (idx, enemy) = do
 getEnemiesInPhaserRange :: State GameState [(Int, Enemy)]
 getEnemiesInPhaserRange = do
   Ship {..} <- use gameStateShip
-  sector <- use gameStateSector
-  let rangeBoxCorner = ( max 0 (shipPositionX - (shipPhaserRange `div` 2))
+  quadrant <- use gameStateQuadrant
+  currentSector <- use gameStateSector
+  let sector = Q.getSector quadrant currentSector
+      rangeBoxCorner = ( max 0 (shipPositionX - (shipPhaserRange `div` 2))
                        , max 0 (shipPositionY - (shipPhaserRange `div` 2)))
       rangeBoxOffset = (shipPhaserRange, shipPhaserRange)
   pure . enemiesInRange rangeBoxCorner rangeBoxOffset $ sector^.enemyShips
@@ -100,7 +106,9 @@ getEnemiesInPhaserRange = do
 handleFireTorpedo :: Int -> [(Int, Int)] -> State GameState CommandResult
 handleFireTorpedo num coords = do
   ship <- use gameStateShip
-  sector <- use gameStateSector
+  quadrant <- use gameStateQuadrant
+  currentSector <- use gameStateSector
+  let sector = Q.getSector quadrant currentSector
   case compare num (ship^.Ship.torpedos) of
     GT -> do
       sayDialog Combat
@@ -129,8 +137,9 @@ handleFireTorpedo num coords = do
             let damagedEnemy = if isHit
                   then Enemy.destroyEnemy enemy
                   else enemy
-            zoom gameStateSector $
-              enemyShips %= \ships -> ships Array.// [(enemyIx, damagedEnemy)]
+            zoom gameStateQuadrant $ do
+              Q.quadrantEnemyShips %= \enemiesMap ->
+                M.adjust (\enemies -> enemies Array.// [(enemyIx, damagedEnemy)]) currentSector enemiesMap
       zoom gameStateShip $
         Ship.torpedos %= \currentAmt -> currentAmt - num
       pure Performed

@@ -36,6 +36,7 @@ library
       LambdaTrek.Simulation.Dialog
       LambdaTrek.Simulation.Enemy
       LambdaTrek.Simulation.Enemy.AI
+      LambdaTrek.Simulation.Quadrant
       LambdaTrek.Simulation.Sector
       LambdaTrek.Simulation.Ship
       LambdaTrek.Simulation.Station
@@ -52,6 +53,7 @@ library
       array
     , base >=4.7 && <5
     , brick
+    , containers
     , microlens
     , microlens-mtl
     , microlens-th
@@ -86,6 +88,7 @@ test-suite LambdaTrek-test
       LambdaTrek
     , array
     , base >=4.7 && <5
+    , containers
     , hspec
     , microlens
     , mtl

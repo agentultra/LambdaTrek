@@ -37,6 +37,7 @@ library:
   dependencies:
     - array
     - brick
+    - containers
     - microlens
     - microlens-mtl
     - microlens-th
@@ -67,6 +68,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - array
+    - containers
     - LambdaTrek
     - hspec
     - microlens

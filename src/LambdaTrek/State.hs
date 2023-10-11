@@ -7,6 +7,7 @@ import Control.Monad.State
 import Data.Text (Text)
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Dialog
+import LambdaTrek.Simulation.Quadrant
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
 import Lens.Micro
@@ -24,7 +25,8 @@ data GameState
   { _gameStateCommandInput :: Text
   , _gameStateCommand :: Maybe Command
   , _gameStateCommandError :: Maybe Text
-  , _gameStateSector :: Sector
+  , _gameStateQuadrant :: Quadrant
+  , _gameStateSector :: (Int, Int)
   , _gameStateShip :: Ship
   , _gameStateRemainingTurns :: Int
   , _gameStateDialog :: [Dialog]
@@ -41,7 +43,8 @@ initialGameState gen
   { _gameStateCommandInput = ""
   , _gameStateCommand = Nothing
   , _gameStateCommandError = Nothing
-  , _gameStateSector = emptySector & stars .~ [(10, 10)]
+  , _gameStateQuadrant = initQuadrant
+  , _gameStateSector = (0, 0)
   , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5
   , _gameStateRemainingTurns = 200
   , _gameStateDialog = []
