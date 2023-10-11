@@ -118,8 +118,17 @@ handleFireTorpedo num coords = do
               <> T.pack (show coord)
               <> " in empty space!"
           Just (enemyIx, enemy) -> do
-            sayDialog Combat "Enemy hit, sir!"
-            let damagedEnemy = Enemy.destroyEnemy enemy
+            chance <- randomRange 0 100
+            let isHit = chance >= 3
+            if isHit
+              then sayDialog Combat "Enemy hit, sir!"
+              else sayDialog Combat
+                   $ "Sir, torpedo "
+                   <> (T.pack . show $ coord)
+                   <> " missed!"
+            let damagedEnemy = if isHit
+                  then Enemy.destroyEnemy enemy
+                  else enemy
             zoom gameStateSector $
               enemyShips %= \ships -> ships Array.// [(enemyIx, damagedEnemy)]
       zoom gameStateShip $
