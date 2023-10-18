@@ -105,7 +105,8 @@ main = hspec $ do
                 , _gameStateCommand = Just $ EngineMove 7 3
                 }
               nextState = (`execState` initialState) updateSimulation
-              (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+              nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
+              (Just enemy) = Array.elems (nextSector^.enemyShips) ^? ix 0
               initialStateShip = initialState^.gameStateShip
               nextStateShip = nextState^.gameStateShip
           enemy^.Enemy.state `shouldBe` Fighting
@@ -276,8 +277,9 @@ main = hspec $ do
               , _gameStateCommand = Just (EngineMove 14 14)
               }
             nextState = (`execState` initialState) updateSimulation
-            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
-        enemy^.Enemy.state `shouldBe` Patrolling
+            nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
+            (Just enemy) = Array.elems (nextSector^.enemyShips) ^? ix 0
+        enemy^.(Enemy.state) `shouldBe` Patrolling
 
       it "should do nothing if the enemy is destroyed" $ do
         -- emptySector { sectorEnemyShips =  }
@@ -289,8 +291,9 @@ main = hspec $ do
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation
-            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
-        enemy^.Enemy.state `shouldBe` Patrolling
+            nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
+            (Just enemy) = Array.elems (nextSector^.enemyShips) ^? ix 0
+        enemy^.(Enemy.state) `shouldBe` Patrolling
 
       it "should change to Fighting when the player ship is in range" $ do
         let initialState
@@ -299,8 +302,9 @@ main = hspec $ do
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation
-            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
-        enemy^.Enemy.state `shouldBe` Fighting
+            nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
+            (Just enemy) = Array.elems (nextSector^.enemyShips) ^? ix 0
+        enemy^.(Enemy.state) `shouldBe` Fighting
 
     context "When in the Fighting state" $ do
       it "should transition to patrolling when the player moves out of range" $ do
@@ -310,12 +314,14 @@ main = hspec $ do
               , _gameStateCommand = Just (EngineMove 7 3)
               }
             nextState = (`execState` initialState) updateSimulation
-            (Just enemy) = Array.elems (nextState^.gameStateSector.enemyShips) ^? ix 0
+            nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
+            (Just enemy) = Array.elems (nextSector^.enemyShips) ^? ix 0
         enemy^.Enemy.state `shouldBe` Fighting
 
         let finalState = (`execState` nextState { _gameStateCommand = Just (EngineMove 14 14) }) updateSimulation
+            finalSector = getSector (finalState^.gameStateQuadrant) (finalState^.gameStateSector)
 
-            (Just enemy') = Array.elems (finalState^.gameStateSector.enemyShips) ^? ix 0
+            (Just enemy') = Array.elems (finalSector^.enemyShips) ^? ix 0
 
         enemy'^.Enemy.state `shouldBe` Patrolling
 
