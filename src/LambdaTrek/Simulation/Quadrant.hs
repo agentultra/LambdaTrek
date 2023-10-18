@@ -8,7 +8,9 @@ module LambdaTrek.Simulation.Quadrant where
 
 import Data.Array hiding ((!))
 import qualified Data.Array as Array
+import Data.List.Split
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import LambdaTrek.Simulation.Enemy
@@ -56,6 +58,10 @@ updateSector quadrant sectorCoord Sector {..} =
            }
 
 newtype QuadrantTile = QuadrantTile Int
+  deriving (Eq, Show)
+
+renderTile :: QuadrantTile -> Text
+renderTile = T.pack . show
 
 newtype QuadrantTiles = QuadrantTiles { getQuadrantTiles :: Array Int Int }
 
@@ -70,6 +76,15 @@ buildTiles :: Quadrant -> QuadrantTiles
 buildTiles _ = QuadrantTiles $ listArray (0, 15) [1..]
 
 render :: QuadrantTiles -> Text
-render = const "QUADRANT"
+render
+  = T.intercalate "\n"
+  . map renderRow
+  . chunksOf 4
+  . map (QuadrantTile . snd)
+  . assocs
+  . getQuadrantTiles
+  where
+    renderRow :: [QuadrantTile] -> Text
+    renderRow = T.intercalate " | " . map renderTile
 
 makeLenses ''Quadrant
