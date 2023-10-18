@@ -97,6 +97,8 @@ ui f =
           sectorScreen f
           <+> vBorder
           <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f)
+        QuadrantScreen ->
+          str "QUADRANT"
         GameOverScreen -> gameOverScreen f
   in joinBorders $
      withBorderStyle unicode $

@@ -17,6 +17,7 @@ import System.Random
 
 data GameScreen
   = SectorScreen
+  | QuadrantScreen
   | GameOverScreen
   deriving (Bounded, Enum, Eq, Show)
 

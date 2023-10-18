@@ -33,6 +33,12 @@ lambdaHandleEvent :: BrickEvent Name e -> EventM Name (Form GameState e Name) ()
 lambdaHandleEvent ev = case ev of
   VtyEvent (V.EvResize _ _) -> pure ()
   VtyEvent (V.EvKey V.KEsc []) -> halt
+  VtyEvent (V.EvKey (V.KFun 1) _) -> do
+    s <- gets formState
+    modify . updateFormState . (\s' -> s' & gameStateScreen .~ QuadrantScreen) $ s
+  VtyEvent (V.EvKey (V.KFun 2) _) -> do
+    s <- gets formState
+    modify . updateFormState . (\s' -> s' & gameStateScreen .~ SectorScreen) $ s
   VtyEvent (V.EvKey V.KEnter []) -> do
     s <- gets formState
     case runCommandParser . T.unpack . T.strip. T.toUpper $ s^.gameStateCommandInput of
