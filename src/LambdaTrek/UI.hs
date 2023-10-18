@@ -84,6 +84,16 @@ sectorDisplay gameState =
 sectorScreen :: Form GameState e Name -> Widget Name
 sectorScreen f = sectorDisplay $ formState f
 
+quadrantDisplay :: GameState -> Widget Name
+quadrantDisplay gameState =
+  let quadrantTiles = Quadrant.buildTiles $ gameState^.gameStateQuadrant
+  in (center . str . Text.unpack . Quadrant.render $ quadrantTiles)
+     <=> hBorder
+     <=> vLimit 5 (sectorDialog gameState)
+
+quadrantScreen :: Form GameState e Name -> Widget Name
+quadrantScreen f = quadrantDisplay $ formState f
+
 gameOverScreen :: Form GameState e Name -> Widget Name
 gameOverScreen f =
   let gameState = formState f
@@ -98,7 +108,9 @@ ui f =
           <+> vBorder
           <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f)
         QuadrantScreen ->
-          str "QUADRANT"
+          quadrantScreen f
+          <+> vBorder
+          <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f)
         GameOverScreen -> gameOverScreen f
   in joinBorders $
      withBorderStyle unicode $

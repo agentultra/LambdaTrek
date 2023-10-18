@@ -1,11 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Quadrant where
 
 import Data.Array hiding ((!))
+import Data.Text (Text)
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import LambdaTrek.Simulation.Enemy
@@ -51,5 +53,13 @@ updateSector quadrant sectorCoord Sector {..} =
            , _quadrantEnemyShips = M.adjust (const sectorEnemyShips) sectorCoord (_quadrantEnemyShips quadrant)
            , _quadrantStations = M.adjust (const sectorStations) sectorCoord (_quadrantStations quadrant)
            }
+
+newtype QuadrantTiles = QuadrantTiles { getQuadrantTiles :: Array Int Int }
+
+buildTiles :: Quadrant -> QuadrantTiles
+buildTiles _ = QuadrantTiles $ listArray (0, 0) []
+
+render :: QuadrantTiles -> Text
+render = const "QUADRANT"
 
 makeLenses ''Quadrant
