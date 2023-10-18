@@ -14,7 +14,7 @@ import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Enemy.AI
-import LambdaTrek.Simulation.Quadrant
+import LambdaTrek.Simulation.Quadrant hiding (getTile)
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.Simulation.Tile

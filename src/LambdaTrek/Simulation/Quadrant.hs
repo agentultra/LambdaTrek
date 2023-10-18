@@ -7,6 +7,7 @@
 module LambdaTrek.Simulation.Quadrant where
 
 import Data.Array hiding ((!))
+import qualified Data.Array as Array
 import Data.Text (Text)
 import Data.Map (Map, (!))
 import qualified Data.Map as M
@@ -54,10 +55,19 @@ updateSector quadrant sectorCoord Sector {..} =
            , _quadrantStations = M.adjust (const sectorStations) sectorCoord (_quadrantStations quadrant)
            }
 
+newtype QuadrantTile = QuadrantTile Int
+
 newtype QuadrantTiles = QuadrantTiles { getQuadrantTiles :: Array Int Int }
 
+getTile :: Int -> Int -> QuadrantTiles -> Maybe QuadrantTile
+getTile x y tiles
+  | x >= 0 && x <= 15 && y >= 0 && y <= 15 =
+    let quadrantData = getQuadrantTiles tiles
+    in Just . QuadrantTile $ quadrantData Array.! ((y * 16) + x)
+  | otherwise = Nothing
+
 buildTiles :: Quadrant -> QuadrantTiles
-buildTiles _ = QuadrantTiles $ listArray (0, 0) []
+buildTiles _ = QuadrantTiles $ listArray (0, 15) [1..]
 
 render :: QuadrantTiles -> Text
 render = const "QUADRANT"

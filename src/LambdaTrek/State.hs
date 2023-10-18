@@ -8,7 +8,6 @@ import Data.Text (Text)
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Quadrant
-import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship
 import Lens.Micro
 import Lens.Micro.Mtl
