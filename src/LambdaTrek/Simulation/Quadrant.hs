@@ -7,7 +7,6 @@
 module LambdaTrek.Simulation.Quadrant where
 
 import Data.Array hiding ((!))
-import Data.List ((!!))
 import qualified Data.Array as Array
 import Data.List.Split
 import Data.Text (Text)
@@ -20,8 +19,6 @@ import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Station
 import Lens.Micro.TH
 
-import qualified Debug.Trace as Debug
-
 data Quadrant
   = Quadrant
   { _quadrantStars :: Map (Int, Int) [(Int, Int)]
@@ -31,7 +28,7 @@ data Quadrant
   deriving (Eq, Show)
 
 quadrantCoords :: [(Int, Int)]
-quadrantCoords = [(x, y) | x <- [0..15], y <- [0..15]]
+quadrantCoords = [(x, y) | x <- [0..3], y <- [0..3]]
 
 initQuadrant :: Quadrant
 initQuadrant =
@@ -82,8 +79,21 @@ toQuadrantTile Sector {..}
   where
     enemyAlive Enemy {..} = enemyHitPoints > 0
 
-renderTile :: QuadrantTile -> Text
-renderTile = T.pack . show
+renderTile :: Int -> [QuadrantTile] -> Text
+renderTile 0 ts = T.intercalate " " $ replicate (length ts) "+-----+"
+renderTile 1 ts = T.intercalate " " $ replicate (length ts) "|     |"
+renderTile 2 ts = T.intercalate " " $ map renderQuadrantData ts
+renderTile 3 ts = T.intercalate " " $ replicate (length ts) "|     |"
+renderTile 4 ts = T.intercalate " " $ replicate (length ts) "+-----+"
+renderTile _ _ = ""
+
+renderQuadrantData :: QuadrantTile -> Text
+renderQuadrantData QuadrantTile {..} =
+  "| " <> renderHasShips <> renderHasStations <> renderHasPlayerShip <> " |"
+  where
+    renderHasShips = if quadrantTileHasEnemyShips then "<" else "?"
+    renderHasStations = if quadrantTileHasStarbase then "$" else "?"
+    renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else "_"
 
 newtype QuadrantTiles
   = QuadrantTiles { getQuadrantTiles :: [QuadrantTile] }
@@ -108,6 +118,9 @@ render
   . getQuadrantTiles
   where
     renderRow :: [QuadrantTile] -> Text
-    renderRow = T.intercalate " | " . map renderTile
+    renderRow tiles
+      = T.intercalate "\n"
+      . map (uncurry renderTile)
+      $ [(textRowIx, tiles) | textRowIx <- [0..4]]
 
 makeLenses ''Quadrant
