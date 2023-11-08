@@ -147,6 +147,16 @@ parseTorpedo = do
          $ InvalidFireTorpedo "Number of coordinates must match number of torpoedos"
     else pure . Right $ FireTorpedo amt coords
 
+parseLongRangeScan :: ReadP (Either CommandParseError Command)
+parseLongRangeScan = do
+  _ <- string "LRS"
+  skipSpaces
+  coord <- parseCoordinate
+  case coord of
+    (x, y) | x >= 0 && x <= 3 && y >= 0 && y <= 3 ->
+             pure . Right $ LongRangeScan coord
+    _ -> pure . Left . InvalidLongRangeScan $ "Coordinate values must be 0, 1, 2, or 3"
+
 parseCommand :: ReadP (Either CommandParseError Command)
 parseCommand
   = choice
@@ -157,6 +167,7 @@ parseCommand
   , parseShields
   , parseTransfer
   , parseTorpedo
+  , parseLongRangeScan
   ]
 
 runCommandParser :: String -> Either CommandParseError Command
@@ -171,10 +182,12 @@ runCommandParser = handleParseResult . readP_to_S parseCommand
 data CommandParseError
   = InvalidEngineMove Text
   | InvalidFireTorpedo Text
+  | InvalidLongRangeScan Text
   | NoCommand
   deriving (Eq, Show)
 
 renderCommandParseError :: CommandParseError -> Text
 renderCommandParseError (InvalidEngineMove msg) = msg
 renderCommandParseError (InvalidFireTorpedo msg) = msg
+renderCommandParseError (InvalidLongRangeScan msg) = msg
 renderCommandParseError NoCommand = "No command"

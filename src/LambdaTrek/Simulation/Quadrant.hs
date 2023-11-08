@@ -68,6 +68,11 @@ updateSector quadrant sectorCoord Sector {..} =
            , _quadrantStations = M.adjust (const sectorStations) sectorCoord (_quadrantStations quadrant)
            }
 
+scanQuadrant :: (Int, Int) -> Quadrant -> Quadrant
+scanQuadrant coord quadrant =
+  let scanState = _quadrantScanState quadrant
+  in quadrant { _quadrantScanState = M.adjust (const True) coord scanState }
+
 data QuadrantTileData
   = QuadrantTileData
     { quadrantTileHasPlayerShip :: Bool

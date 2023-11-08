@@ -50,6 +50,7 @@ handleCommand = \case
     Shields cmdState -> handleShields cmdState
     Transfer amt -> handleTransfer amt
     FireTorpedo num coords -> handleFireTorpedo num coords
+    LongRangeScan coord -> handleLongRangeScan coord
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
@@ -210,6 +211,9 @@ handleTransfer amt = do
     $ "Increasing shields by " <> Text.pack (show amt)
     <> "% Aye!"
   pure Performed
+
+handleLongRangeScan :: (Int, Int) -> State GameState CommandResult
+handleLongRangeScan _ = pure Denied
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
