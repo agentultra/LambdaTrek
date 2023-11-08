@@ -43,7 +43,7 @@ initialGameState gen
   { _gameStateCommandInput = ""
   , _gameStateCommand = Nothing
   , _gameStateCommandError = Nothing
-  , _gameStateQuadrant = initQuadrant
+  , _gameStateQuadrant = initQuadrant (0, 0)
   , _gameStateSector = (0, 0)
   , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5
   , _gameStateRemainingTurns = 200

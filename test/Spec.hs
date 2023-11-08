@@ -286,7 +286,7 @@ main = hspec $ do
         let initialState
               = (initialGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5
-              , _gameStateQuadrant = initQuadrant { _quadrantEnemyShips = M.singleton (0, 0) (Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10]) }
+              , _gameStateQuadrant = (initQuadrant (0, 0)) { _quadrantEnemyShips = M.singleton (0, 0) (Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10]) }
               , _gameStateSector = (0, 0)
               , _gameStateCommand = Just (EngineMove 7 3)
               }

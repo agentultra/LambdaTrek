@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -24,14 +25,15 @@ data Quadrant
   { _quadrantStars :: Map (Int, Int) [(Int, Int)]
   , _quadrantEnemyShips :: Map (Int, Int) (Array Int Enemy)
   , _quadrantStations :: Map (Int, Int) (Array Int Station)
+  , _quadrantScanState :: Map (Int, Int) Bool
   }
   deriving (Eq, Show)
 
 quadrantCoords :: [(Int, Int)]
 quadrantCoords = [(x, y) | x <- [0..3], y <- [0..3]]
 
-initQuadrant :: Quadrant
-initQuadrant =
+initQuadrant :: (Int, Int) -> Quadrant
+initQuadrant startingCoord =
   let sectorStarMap
         = M.fromList
         [ (coord, [(10, 10)]) | coord <- quadrantCoords ]
@@ -45,7 +47,12 @@ initQuadrant =
         [ (coord, listArray (0,0) [Station 9 1 100])
         | coord <- quadrantCoords
         ]
-  in Quadrant sectorStarMap sectorEnemyShipMap sectorStationMap
+  in Quadrant
+     { _quadrantStars = sectorStarMap
+     , _quadrantEnemyShips = sectorEnemyShipMap
+     , _quadrantStations = sectorStationMap
+     , _quadrantScanState = M.singleton startingCoord True
+     }
 
 getSector :: Quadrant -> (Int, Int) -> Sector
 getSector Quadrant {..} sectorCoord =
@@ -61,21 +68,25 @@ updateSector quadrant sectorCoord Sector {..} =
            , _quadrantStations = M.adjust (const sectorStations) sectorCoord (_quadrantStations quadrant)
            }
 
-data QuadrantTile
-  = QuadrantTile
-  { quadrantTileHasPlayerShip :: Bool
-  , quadrantTileHasEnemyShips :: Bool
-  , quadrantTileHasStarbase   :: Bool
-  }
+data QuadrantTileData
+  = QuadrantTileData
+    { quadrantTileHasPlayerShip :: Bool
+    , quadrantTileHasEnemyShips :: Bool
+    , quadrantTileHasStarbase   :: Bool
+    }
   deriving (Eq, Show)
 
-toQuadrantTile :: Bool -> Sector -> QuadrantTile
-toQuadrantTile isShipPresent Sector {..}
-  = QuadrantTile
-  { quadrantTileHasPlayerShip = isShipPresent
-  , quadrantTileHasEnemyShips = any enemyAlive . Array.elems $ sectorEnemyShips
-  , quadrantTileHasStarbase   = not . null . Array.elems $ sectorStations
-  }
+data QuadrantTile = Scanned QuadrantTileData | Unscanned
+  deriving (Eq, Show)
+
+toQuadrantTile :: Bool -> Bool -> Sector -> QuadrantTile
+toQuadrantTile isShipPresent hasBeenScanned Sector {..}
+  | hasBeenScanned = Scanned QuadrantTileData
+    { quadrantTileHasPlayerShip = isShipPresent
+    , quadrantTileHasEnemyShips = any enemyAlive . Array.elems $ sectorEnemyShips
+    , quadrantTileHasStarbase   = not . null . Array.elems $ sectorStations
+    }
+  | otherwise = Unscanned
   where
     enemyAlive Enemy {..} = enemyHitPoints > 0
 
@@ -88,12 +99,14 @@ renderTile 4 ts = T.intercalate " " $ replicate (length ts) "+-----+"
 renderTile _ _ = ""
 
 renderQuadrantData :: QuadrantTile -> Text
-renderQuadrantData QuadrantTile {..} =
-  "| " <> renderHasShips <> renderHasStations <> renderHasPlayerShip <> " |"
-  where
-    renderHasShips = if quadrantTileHasEnemyShips then "<" else "?"
-    renderHasStations = if quadrantTileHasStarbase then "$" else "?"
-    renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else " "
+renderQuadrantData = \case
+  Scanned QuadrantTileData {..} ->
+    "| " <> renderHasShips <> renderHasStations <> renderHasPlayerShip <> " |"
+    where
+      renderHasShips = if quadrantTileHasEnemyShips then "<" else "?"
+      renderHasStations = if quadrantTileHasStarbase then "$" else "?"
+      renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else " "
+  Unscanned -> "| ??  |"
 
 newtype QuadrantTiles
   = QuadrantTiles { getQuadrantTiles :: [QuadrantTile] }
@@ -111,9 +124,9 @@ buildTiles currentSector quadrant =
   QuadrantTiles . map getQuadrantTileData $ quadrantCoords
   where
     getQuadrantTileData :: (Int, Int) -> QuadrantTile
-    getQuadrantTileData quadrantCoordinate
-      = toQuadrantTile (currentSector == quadrantCoordinate) . getSector quadrant
-      $ quadrantCoordinate
+    getQuadrantTileData quadrantCoordinate =
+      let sectorScanned = M.findWithDefault False quadrantCoordinate (_quadrantScanState quadrant)
+      in toQuadrantTile (currentSector == quadrantCoordinate) sectorScanned . getSector quadrant $ quadrantCoordinate
 
 render :: QuadrantTiles -> Text
 render
