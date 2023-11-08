@@ -69,10 +69,10 @@ data QuadrantTile
   }
   deriving (Eq, Show)
 
-toQuadrantTile :: Sector -> QuadrantTile
-toQuadrantTile Sector {..}
+toQuadrantTile :: Bool -> Sector -> QuadrantTile
+toQuadrantTile isShipPresent Sector {..}
   = QuadrantTile
-  { quadrantTileHasPlayerShip = False -- TODO: Help! Fix me!
+  { quadrantTileHasPlayerShip = isShipPresent
   , quadrantTileHasEnemyShips = any enemyAlive . Array.elems $ sectorEnemyShips
   , quadrantTileHasStarbase   = not . null . Array.elems $ sectorStations
   }
@@ -93,7 +93,7 @@ renderQuadrantData QuadrantTile {..} =
   where
     renderHasShips = if quadrantTileHasEnemyShips then "<" else "?"
     renderHasStations = if quadrantTileHasStarbase then "$" else "?"
-    renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else "_"
+    renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else " "
 
 newtype QuadrantTiles
   = QuadrantTiles { getQuadrantTiles :: [QuadrantTile] }
@@ -106,9 +106,14 @@ getTile x y tiles
     in Just $ quadrantData !! ((y * 16) + x)
   | otherwise = Nothing
 
-buildTiles :: Quadrant -> QuadrantTiles
-buildTiles quadrant =
-  QuadrantTiles . map (toQuadrantTile . getSector quadrant) $ quadrantCoords
+buildTiles :: (Int, Int) -> Quadrant -> QuadrantTiles
+buildTiles currentSector quadrant =
+  QuadrantTiles . map getQuadrantTileData $ quadrantCoords
+  where
+    getQuadrantTileData :: (Int, Int) -> QuadrantTile
+    getQuadrantTileData quadrantCoordinate
+      = toQuadrantTile (currentSector == quadrantCoordinate) . getSector quadrant
+      $ quadrantCoordinate
 
 render :: QuadrantTiles -> Text
 render

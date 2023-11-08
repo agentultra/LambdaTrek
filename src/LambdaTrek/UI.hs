@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
 module LambdaTrek.UI where
@@ -85,8 +86,8 @@ sectorScreen :: Form GameState e Name -> Widget Name
 sectorScreen f = sectorDisplay $ formState f
 
 quadrantDisplay :: GameState -> Widget Name
-quadrantDisplay gameState =
-  let quadrantTiles = Quadrant.buildTiles $ gameState^.gameStateQuadrant
+quadrantDisplay gameState@GameState {..} =
+  let quadrantTiles = Quadrant.buildTiles _gameStateSector _gameStateQuadrant
   in (center . str . Text.unpack . Quadrant.render $ quadrantTiles)
      <=> hBorder
      <=> vLimit 5 (sectorDialog gameState)
