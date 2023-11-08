@@ -213,7 +213,9 @@ handleTransfer amt = do
   pure Performed
 
 handleLongRangeScan :: (Int, Int) -> State GameState CommandResult
-handleLongRangeScan _ = pure Denied
+handleLongRangeScan coord = do
+  gameStateQuadrant %= Q.scanQuadrant coord
+  pure Performed
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do

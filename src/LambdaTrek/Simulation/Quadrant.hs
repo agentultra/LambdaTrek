@@ -71,7 +71,7 @@ updateSector quadrant sectorCoord Sector {..} =
 scanQuadrant :: (Int, Int) -> Quadrant -> Quadrant
 scanQuadrant coord quadrant =
   let scanState = _quadrantScanState quadrant
-  in quadrant { _quadrantScanState = M.adjust (const True) coord scanState }
+  in quadrant { _quadrantScanState = M.alter (const $ Just True) coord scanState }
 
 data QuadrantTileData
   = QuadrantTileData
