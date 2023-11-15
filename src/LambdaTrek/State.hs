@@ -45,7 +45,7 @@ initialGameState gen
   , _gameStateCommandError = Nothing
   , _gameStateQuadrant = initQuadrant (0, 0)
   , _gameStateSector = (0, 0)
-  , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5
+  , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
   , _gameStateRemainingTurns = 200
   , _gameStateDialog = []
   , _gameStateRandomGen = gen

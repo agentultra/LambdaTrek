@@ -17,6 +17,17 @@ shieldStateText = \case
   ShieldsUp -> "Up"
   ShieldsDown -> "Down"
 
+data WarpFactor
+  = WarpFactorOne
+  | WarpFactorTwo
+  | WarpFactorThree
+  | WarpFactorFour
+  | WarpFactorFive
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+warpFactorNumeral :: WarpFactor -> Int
+warpFactorNumeral = (+ 1) . fromEnum
+
 data Ship
   = Ship
   { shipPositionX      :: Int
@@ -28,6 +39,7 @@ data Ship
   , shipShieldStrength :: Double -- ^ Between 0 and 1 representing a
                                  -- percentage of damage reduction.
   , shipTorpedos       :: Int
+  , shipWarpFactor     :: WarpFactor
   }
   deriving (Eq, Ord, Show)
 

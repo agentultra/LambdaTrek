@@ -23,7 +23,7 @@ import LambdaTrek.Simulation.Sector
 import qualified LambdaTrek.Simulation.Quadrant as Q
 import LambdaTrek.Simulation.Station (Station (..))
 import qualified LambdaTrek.Simulation.Station as Station
-import LambdaTrek.Simulation.Ship (Ship (..), ShieldState (..))
+import LambdaTrek.Simulation.Ship (Ship (..), ShieldState (..), WarpFactor (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
 import Lens.Micro
@@ -52,6 +52,7 @@ handleCommand = \case
     Transfer amt -> handleTransfer amt
     FireTorpedo num coords -> handleFireTorpedo num coords
     LongRangeScan coord -> handleLongRangeScan coord
+    WarpFactor factor -> handleWarpFactor factor
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
@@ -70,6 +71,7 @@ handleEngineMove x y = do
         , shipShieldState = ship_^.Ship.shieldState
         , shipShieldStrength = ship_^.Ship.shieldStrength
         , shipTorpedos = ship_^.Ship.torpedos
+        , shipWarpFactor = ship_^.Ship.warpFactor
         }
       pure Performed
     _ -> pure Denied
@@ -232,6 +234,16 @@ handleLongRangeScan coord = do
       <> (Text.pack . show $ coord)
       <> " is beyond our long range sensor range."
     pure Denied
+
+handleWarpFactor :: WarpFactor -> State GameState CommandResult
+handleWarpFactor factor = do
+  zoom gameStateShip $ do
+    Ship.warpFactor .= factor
+  sayDialog Helm $
+    "Aye captain, warp factor "
+    <> (Text.pack . show . Ship.warpFactorNumeral $ factor)
+    <> "."
+  pure Performed
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do

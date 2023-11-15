@@ -10,6 +10,7 @@ module LambdaTrek.Command.Parse where
 import Data.Char
 import Data.Functor
 import Data.Text (Text)
+import qualified Data.Text as Text
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Ship
 import LambdaTrek.Units
@@ -157,6 +158,28 @@ parseLongRangeScan = do
              pure . Right $ LongRangeScan coord
     _ -> pure . Left . InvalidLongRangeScan $ "Coordinate values must be 0, 1, 2, or 3"
 
+parseWarpFactor :: ReadP (Either CommandParseError WarpFactor)
+parseWarpFactor = do
+  x <- digit {- HLINT ignore -}
+  let factor = case x of
+        1 -> Right WarpFactorOne
+        2 -> Right WarpFactorTwo
+        3 -> Right WarpFactorThree
+        4 -> Right WarpFactorFour
+        5 -> Right WarpFactorFive
+        _ -> Left $ InvalidWarpFactor x
+  pure factor
+
+parseWarpFactorCommand :: ReadP (Either CommandParseError Command)
+parseWarpFactorCommand = do
+  _ <- string "FACTOR"
+  skipSpaces
+  factorResult <- parseWarpFactor
+  case factorResult of
+    Left err -> pure $ Left err
+    Right factor ->
+      pure $ Right (WarpFactor factor)
+
 parseCommand :: ReadP (Either CommandParseError Command)
 parseCommand
   = choice
@@ -168,6 +191,7 @@ parseCommand
   , parseTransfer
   , parseTorpedo
   , parseLongRangeScan
+  , parseWarpFactorCommand
   ]
 
 runCommandParser :: String -> Either CommandParseError Command
@@ -183,6 +207,7 @@ data CommandParseError
   = InvalidEngineMove Text
   | InvalidFireTorpedo Text
   | InvalidLongRangeScan Text
+  | InvalidWarpFactor Int
   | NoCommand
   deriving (Eq, Show)
 
@@ -190,4 +215,6 @@ renderCommandParseError :: CommandParseError -> Text
 renderCommandParseError (InvalidEngineMove msg) = msg
 renderCommandParseError (InvalidFireTorpedo msg) = msg
 renderCommandParseError (InvalidLongRangeScan msg) = msg
+renderCommandParseError (InvalidWarpFactor val) =
+  "Invalid warp factor: " <> (Text.pack . show $ val)
 renderCommandParseError NoCommand = "No command"

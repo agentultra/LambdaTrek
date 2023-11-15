@@ -19,6 +19,7 @@ data Command
   | FireTorpedo Int [(Int, Int)]
     -- ^ Fire X number of torpedos at specified targets, one target per torpedo
   | LongRangeScan (Int, Int)
+  | WarpFactor WarpFactor
   deriving (Eq, Ord, Show)
 
 turnCost :: Command -> Int
@@ -31,6 +32,7 @@ turnCost = \case
   Transfer _ -> 1
   FireTorpedo _ _ -> 1
   LongRangeScan _ -> 1
+  WarpFactor _ -> 1
 
 -- | The result of executing a command may change state.  If it does
 -- change the state, 'Performed' indicates that game time has elapsed
