@@ -108,10 +108,10 @@ renderQuadrantData = \case
   Scanned QuadrantTileData {..} ->
     "| " <> renderHasShips <> renderHasStations <> renderHasPlayerShip <> " |"
     where
-      renderHasShips = if quadrantTileHasEnemyShips then "<" else "?"
+      renderHasShips = if quadrantTileHasEnemyShips then "<" else " "
       renderHasStations = if quadrantTileHasStarbase then "$" else "?"
       renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else " "
-  Unscanned -> "| ??  |"
+  Unscanned -> "|  ?  |"
 
 newtype QuadrantTiles
   = QuadrantTiles { getQuadrantTiles :: [QuadrantTile] }
