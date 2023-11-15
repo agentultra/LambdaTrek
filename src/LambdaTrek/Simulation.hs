@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -214,8 +215,23 @@ handleTransfer amt = do
 
 handleLongRangeScan :: (Int, Int) -> State GameState CommandResult
 handleLongRangeScan coord = do
-  gameStateQuadrant %= Q.scanQuadrant coord
-  pure Performed
+  currentCoord <- use gameStateSector
+  if inRange coord currentCoord 2
+    then do
+    gameStateQuadrant %= Q.scanQuadrant coord
+    sayDialog Helm
+      $ "Aye, scanning quadrant "
+      <> (Text.pack . show $ coord)
+      <> " on long range scanners."
+    zoom gameStateShip $ do
+      Ship.energy -= 10
+    pure Performed
+    else do
+    sayDialog Helm
+      $ "Captain, "
+      <> (Text.pack . show $ coord)
+      <> " is beyond our long range sensor range."
+    pure Denied
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
@@ -327,6 +343,9 @@ generateShipDamageDialog DamageResult {..} = do
 class HasPosition a where
   getPosition :: a -> (Int, Int)
 
+instance HasPosition (Int, Int) where
+  getPosition (x, y) = (x, y)
+
 instance HasPosition Enemy where
   getPosition Enemy {..} = (enemyPositionX, enemyPositionY)
 
@@ -339,6 +358,9 @@ getCurrentSector = do
   currentSector <- use gameStateSector
   pure $ Q.getSector quadrant currentSector
 
+-- | Determine if a coordinate is within @range@ distance.
+--
+-- @range@ is not inclusive.
 inRange :: (HasPosition a , HasPosition b) => a -> b -> Int -> Bool
 inRange a b range =
   let (aX, aY) = getPosition a
