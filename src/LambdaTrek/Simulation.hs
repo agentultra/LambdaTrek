@@ -34,18 +34,35 @@ updateSimulation = do
   command <- use gameStateCommand
   case command of
     Just cmd -> do
+      cmdCost <- turnCost cmd
       commandResult <- handleCommand cmd
       when (commandResult == Performed) $ do
-        gameStateRemainingTurns %= flip (-) (turnCost cmd)
+        gameStateRemainingTurns %= flip (-) cmdCost
       gameStateCommand .= Nothing
       updateEnemyStates
       handleEnemies
     _ -> pure ()
 
+turnCost :: Command -> State GameState Int
+turnCost = \case
+  EngineMove _ _   -> pure 2
+  FirePhasers _ _  -> pure 1
+  Dock             -> pure 15
+  Shields _        -> pure 1
+  Transfer _       -> pure 1
+  FireTorpedo _ _  -> pure 1
+  LongRangeScan _  -> pure 1
+  WarpFactor _     -> pure 1
+  Warp warpX warpY -> do
+    -- TODO: Should take less turns at higher warp factors
+    ship <- use gameStateShip
+    sectorCoord <- use gameStateSector
+    let dist = distance sectorCoord (warpX, warpY)
+    pure $ 2 * dist * Ship.warpFactorNumeral (ship^.Ship.warpFactor)
+
 handleCommand :: Command -> State GameState CommandResult
 handleCommand = \case
     EngineMove x y -> handleEngineMove x y
-    JumpMove _ -> pure Denied -- TODO: not implemented
     FirePhasers amt fireMode -> handleFirePhasers amt fireMode
     Dock -> handleDocking
     Shields cmdState -> handleShields cmdState
@@ -53,6 +70,7 @@ handleCommand = \case
     FireTorpedo num coords -> handleFireTorpedo num coords
     LongRangeScan coord -> handleLongRangeScan coord
     WarpFactor factor -> handleWarpFactor factor
+    Warp x y -> handleWarp x y
 
 handleEngineMove :: Int -> Int -> State GameState CommandResult
 handleEngineMove x y = do
@@ -245,6 +263,24 @@ handleWarpFactor factor = do
     <> "."
   pure Performed
 
+handleWarp :: Int -> Int -> State GameState CommandResult
+handleWarp warpX warpY = do
+  -- TODO: Check that we actually have energy to warp before engaging!
+  currentSector <- use gameStateSector
+  ship <- use gameStateShip
+  let warpFactor = ship^.Ship.warpFactor
+      dist = distance currentSector (warpX, warpY)
+      energyConsumed = (2 ^ dist) * Ship.warpFactorNumeral warpFactor
+  gameStateSector .= (warpX, warpY)
+  zoom gameStateShip $ do
+    Ship.energy -= energyConsumed
+  sayDialog Helm
+    $ "Aye captain, setting course for sector "
+    <> (Text.pack . show $ (warpX, warpY))
+    <> " at warp factor "
+    <> (Text.pack . show $ warpFactor)
+  pure Performed
+
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
   sector <- getCurrentSector
@@ -374,11 +410,13 @@ getCurrentSector = do
 --
 -- @range@ is not inclusive.
 inRange :: (HasPosition a , HasPosition b) => a -> b -> Int -> Bool
-inRange a b range =
-  let (aX, aY) = getPosition a
-      (bX, bY) = getPosition b
-      distance = abs (bX - aX) + abs (bY - aY)
-  in distance <= range
+inRange a b range = distance a b <= range
+
+distance :: (HasPosition a, HasPosition b) => a -> b -> Int
+distance x y =
+  let (aX, aY) = getPosition x
+      (bX, bY) = getPosition y
+  in abs (bX - aX) + abs (bY - aY)
 
 findMaybe :: (a -> Maybe a) -> [a] -> Maybe a
 findMaybe _ [] = Nothing

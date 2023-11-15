@@ -43,7 +43,6 @@ library
       LambdaTrek.Simulation.Tile
       LambdaTrek.State
       LambdaTrek.UI
-      LambdaTrek.Units
   other-modules:
       Paths_LambdaTrek
   hs-source-dirs:
