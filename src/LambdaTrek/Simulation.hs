@@ -265,21 +265,28 @@ handleWarpFactor factor = do
 
 handleWarp :: Int -> Int -> State GameState CommandResult
 handleWarp warpX warpY = do
-  -- TODO: Check that we actually have energy to warp before engaging!
   currentSector <- use gameStateSector
   ship <- use gameStateShip
   let warpFactor = ship^.Ship.warpFactor
       dist = distance currentSector (warpX, warpY)
       energyConsumed = (2 ^ dist) * Ship.warpFactorNumeral warpFactor
   gameStateSector .= (warpX, warpY)
-  zoom gameStateShip $ do
-    Ship.energy -= energyConsumed
-  sayDialog Helm
-    $ "Aye captain, setting course for sector "
-    <> (Text.pack . show $ (warpX, warpY))
-    <> " at warp factor "
-    <> (Text.pack . show $ warpFactor)
-  pure Performed
+  if energyConsumed <= ship^.Ship.energy
+    then do
+    zoom gameStateShip $ do
+      Ship.energy -= energyConsumed
+    sayDialog Helm
+      $ "Aye captain, setting course for sector "
+      <> (Text.pack . show $ (warpX, warpY))
+      <> " at warp factor "
+      <> (Text.pack . show $ warpFactor)
+    pure Performed
+    else do
+    sayDialog Helm
+      $ "We do not have enough energy to make the jump, "
+      <> "captain! I suggest we lower the warp factor or "
+      <> "range."
+    pure Denied
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
