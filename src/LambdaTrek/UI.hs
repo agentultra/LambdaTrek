@@ -32,7 +32,8 @@ infoPanel f =
   let gameState = formState f
   in center . renderTable
      $ table
-     [ [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
+     [ [str "Current Sector: ", str $ show (gameState^.gameStateSector)]
+     , [str "Energy:", str $ show (gameState^.gameStateShip.Ship.energy)]
      , [str "Warp Factor:", str . show . Ship.warpFactorNumeral $ (gameState^.gameStateShip.Ship.warpFactor)]
      , [str "Hull:", str $ show (gameState^.gameStateShip.Ship.hull)]
      , [str "Shields:", str $ Text.unpack (Ship.shieldStateText $ gameState^.gameStateShip.Ship.shieldState)]
