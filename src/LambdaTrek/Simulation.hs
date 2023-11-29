@@ -270,11 +270,13 @@ handleWarp warpX warpY = do
   let warpFactor = ship^.Ship.warpFactor
       dist = distance currentSector (warpX, warpY)
       energyConsumed = (2 ^ dist) * Ship.warpFactorNumeral warpFactor
-  gameStateSector .= (warpX, warpY)
+      coord = (warpX, warpY)
+  gameStateSector .= coord
   if energyConsumed <= ship^.Ship.energy
     then do
     zoom gameStateShip $ do
       Ship.energy -= energyConsumed
+    gameStateQuadrant %= Q.scanQuadrant coord
     sayDialog Helm
       $ "Aye captain, setting course for sector "
       <> (Text.pack . show $ (warpX, warpY))
