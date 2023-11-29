@@ -47,3 +47,11 @@ makeFields ''Ship
 
 subtractEnergy :: Int -> Ship -> Ship
 subtractEnergy amt ship = ship & energy %~ \oldAmt -> oldAmt - amt
+
+warpFactorTurnPercent :: WarpFactor -> Double
+warpFactorTurnPercent = \case
+  WarpFactorOne   -> 1.0
+  WarpFactorTwo   -> 0.9
+  WarpFactorThree -> 0.8
+  WarpFactorFour  -> 0.7
+  WarpFactorFive  -> 0.6

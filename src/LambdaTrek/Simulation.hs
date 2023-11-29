@@ -54,11 +54,11 @@ turnCost = \case
   LongRangeScan _  -> pure 1
   WarpFactor _     -> pure 1
   Warp warpX warpY -> do
-    -- TODO: Should take less turns at higher warp factors
     ship <- use gameStateShip
     sectorCoord <- use gameStateSector
     let dist = distance sectorCoord (warpX, warpY)
-    pure $ 2 * dist * Ship.warpFactorNumeral (ship^.Ship.warpFactor)
+        warpPercentage = Ship.warpFactorTurnPercent (ship^.Ship.warpFactor)
+    pure . floor $ 4.0 * fromIntegral dist * warpPercentage
 
 handleCommand :: Command -> State GameState CommandResult
 handleCommand = \case
