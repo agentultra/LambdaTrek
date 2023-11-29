@@ -325,5 +325,34 @@ main = hspec $ do
 
         enemy'^.Enemy.state `shouldBe` Patrolling
 
+  describe "Sector" $ do
+    describe "findEmpty" $ do
+      context "Given a nearly full sector" $ do
+        let fullSector
+              = Sector
+              { sectorStars = [ (x, y)
+                              | x <- [0..14], y <- [0..14]
+                              , not (x == 14 && y == 14)
+                              ]
+              , sectorEnemyShips  = Array.listArray (1, 0) []
+              , sectorStations = Array.listArray (1, 0) []
+              }
+        it "should give us the empty space" $ do
+          let ship
+                = Ship
+                { shipPositionX = 0
+                , shipPositionY = 0
+                , shipEnergy = 100
+                , shipPhaserRange = 0
+                , shipHull = 0
+                , shipShieldState = ShieldsDown
+                , shipShieldStrength = 0
+                , shipTorpedos = 1
+                , shipWarpFactor = WarpFactorOne
+                }
+              sectorTiles = buildSectorTiles ship fullSector
+          findEmpty sectorTiles `shouldBe` (14, 14)
+
+
 hasDialog :: Dialog -> [Dialog] -> Bool
 hasDialog = elem

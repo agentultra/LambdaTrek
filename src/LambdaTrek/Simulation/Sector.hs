@@ -23,11 +23,14 @@ import Lens.Micro
 import Lens.Micro.TH
 
 -- | Sectors are 15x15 tiled regions of space
+--
+-- Be careful not to fill up the sector so there's nowhere to put/move
+-- the ship! Leave at least one empty space!
 data Sector
   = Sector
-  { sectorStars :: [(Int, Int)]
+  { sectorStars      :: [(Int, Int)]
   , sectorEnemyShips :: Array Int Enemy
-  , sectorStations :: Array Int Station
+  , sectorStations   :: Array Int Station
   }
   deriving (Eq, Ord, Show)
 
@@ -61,6 +64,14 @@ unsafeSetTile :: Int -> Int -> Tile -> SectorTiles -> SectorTiles
 unsafeSetTile x y tile sectorTiles =
   let sectorData = getSectorTiles sectorTiles
   in SectorTiles $ sectorData // [((y * 15) + x, fromEnum tile)]
+
+findEmpty :: SectorTiles -> (Int, Int)
+findEmpty = ixToCoord . fst . head . filter ((== Tile.EmptySpace) . toEnum . snd) . assocs . getSectorTiles
+  where
+    ixToCoord :: Int -> (Int, Int)
+    ixToCoord x =
+      let w = 15
+      in (x `div` w, x `rem` w)
 
 buildSectorTiles :: Ship -> Sector -> SectorTiles
 buildSectorTiles ship sector =
