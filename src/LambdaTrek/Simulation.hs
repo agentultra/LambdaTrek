@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -18,6 +17,7 @@ import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Enemy (Enemy (..))
 import LambdaTrek.Simulation.Enemy.AI
+import LambdaTrek.Simulation.Position
 import qualified LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Sector
 import qualified LambdaTrek.Simulation.Quadrant as Q
@@ -396,18 +396,6 @@ generateShipDamageDialog DamageResult {..} = do
       | amt <= 10 = "a little"
       | amt > 10 && amt <= 40 = "some"
       | otherwise = "a lot of"
-
-class HasPosition a where
-  getPosition :: a -> (Int, Int)
-
-instance HasPosition (Int, Int) where
-  getPosition (x, y) = (x, y)
-
-instance HasPosition Enemy where
-  getPosition Enemy {..} = (enemyPositionX, enemyPositionY)
-
-instance HasPosition Ship where
-  getPosition Ship {..} = (shipPositionX, shipPositionY)
 
 getCurrentSector :: State GameState Sector
 getCurrentSector = do

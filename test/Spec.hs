@@ -1,6 +1,7 @@
 {-# OPTIONS -Wno-incomplete-uni-patterns #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 import Control.Monad.State
 import qualified Data.Array as Array
@@ -16,7 +17,9 @@ import LambdaTrek.Simulation.Enemy as Enemy
 import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Quadrant hiding (getTile)
 import LambdaTrek.Simulation.Sector
+import LambdaTrek.Simulation.Sector.Internal
 import LambdaTrek.Simulation.Ship as Ship
+import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Tile
 import LambdaTrek.State
 import Test.Hspec
@@ -326,6 +329,71 @@ main = hspec $ do
         enemy'^.Enemy.state `shouldBe` Patrolling
 
   describe "Sector" $ do
+    describe "sector" $ do
+      context "Given just enough stars" $ do
+        it "should construct a Sector" $ do
+          let notAllStars = [ (x, y)
+                      | x <- [0..14], y <- [0..14]
+                      , not (x == 14 && y == 14)
+                      ]
+          sector notAllStars [] [] `shouldSatisfy` isRight
+
+      context "Given almost all stars and one enemy" $ do
+        it "should not construct a Sector" $ do
+          let notAllStars = [ (x, y)
+                      | x <- [0..14], y <- [0..14]
+                      , not (x == 14 && y == 14)
+                      ]
+              enemy = Enemy
+                { enemyPositionX = 0
+                , enemyPositionY = 0
+                , enemyHitPoints = 10
+                , enemyShieldValue = 10
+                , enemyState = Patrolling
+                , enemyBaseDamageAmount = 10
+                }
+          sector notAllStars [enemy] [] `shouldSatisfy` isLeft
+
+      context "Given almost all stars, an enemy, and a station" $ do
+        it "should not construct a Sector" $ do
+          let notAllStars = [ (x, y)
+                      | x <- [0..14], y <- [0..14]
+                      , not (x == 14 && y == 14)
+                      , not (x == 13 && y == 13)
+                      ]
+              enemy = Enemy
+                      { enemyPositionX = 0
+                      , enemyPositionY = 0
+                      , enemyHitPoints = 10
+                      , enemyShieldValue = 10
+                      , enemyState = Patrolling
+                      , enemyBaseDamageAmount = 10
+                      }
+              station = Station.Station 13 13 100
+          sector notAllStars [enemy] [station] `shouldSatisfy` isLeft
+
+      context "Given enough space for everyone" $ do
+        it "should construct a Sector" $ do
+          let notAllStars = [ (x, y)
+                            | x <- [0..14], y <- [0..14]
+                            , not (x == 14 && y == 14)
+                            , not (x == 13 && y == 13)
+                            ]
+              enemy = Enemy
+                      { enemyPositionX = 0
+                      , enemyPositionY = 0
+                      , enemyHitPoints = 10
+                      , enemyShieldValue = 10
+                      , enemyState = Patrolling
+                      , enemyBaseDamageAmount = 10
+                      }
+          sector notAllStars [enemy] [] `shouldSatisfy` isRight
+
+      context "Given all of the stars are at the same location" $ do
+        it "should not construct a Sector" $ do
+          let badAllStars = repeat (0, 0)
+          sector badAllStars [] [] `shouldBe` Left "Duplicate stars"
+
     describe "findEmpty" $ do
       context "Given a nearly full sector" $ do
         let fullSector
@@ -350,9 +418,9 @@ main = hspec $ do
                 , shipTorpedos = 1
                 , shipWarpFactor = WarpFactorOne
                 }
-              sectorTiles = buildSectorTiles ship fullSector
+              sectorTiles = buildSectorTiles fullSector
+              -- TODO: add ship back in here
           findEmpty sectorTiles `shouldBe` (14, 14)
-
 
 hasDialog :: Dialog -> [Dialog] -> Bool
 hasDialog = elem

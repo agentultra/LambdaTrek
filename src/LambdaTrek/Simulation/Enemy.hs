@@ -5,6 +5,7 @@
 module LambdaTrek.Simulation.Enemy where
 
 import LambdaTrek.Simulation.Enemy.AI
+import LambdaTrek.Simulation.Position
 import Lens.Micro
 import Lens.Micro.TH
 
@@ -18,6 +19,9 @@ data Enemy
   , enemyBaseDamageAmount :: Int
   }
   deriving (Eq, Ord, Show)
+
+instance HasPosition Enemy where
+  getPosition Enemy {..} = (enemyPositionX, enemyPositionY)
 
 makeFields ''Enemy
 

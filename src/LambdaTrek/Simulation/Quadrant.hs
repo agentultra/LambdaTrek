@@ -16,7 +16,7 @@ import Data.Map (Map, (!))
 import qualified Data.Map as M
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Enemy.AI
-import LambdaTrek.Simulation.Sector
+import LambdaTrek.Simulation.Sector.Internal
 import LambdaTrek.Simulation.Station
 import Lens.Micro.TH
 

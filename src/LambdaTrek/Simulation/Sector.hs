@@ -1,40 +1,80 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TemplateHaskell #-}
 
-module LambdaTrek.Simulation.Sector where
+module LambdaTrek.Simulation.Sector
+  ( -- * Types
+    Sector
+    -- * Constructors
+  , sector
+  , -- * Lenses
+    enemyShips
+  , stars
+  , stations
+  , -- * Functions
+    aliveEnemies
+  , buildSectorTiles
+  , emptySector
+  , emptySectorTiles
+  , enemyAtCoord
+  , findEmpty
+  , getTile
+  , listEnemies
+  , listStars
+  , listStations
+  , render
+  , setTile
+  )
+where
 
 import Data.Array
-import Data.List (foldl', find)
+import Data.List (foldl', find, nub, nubBy)
 import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as Text
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Enemy.AI
-import LambdaTrek.Simulation.Ship (Ship)
-import qualified LambdaTrek.Simulation.Ship as Ship
+import LambdaTrek.Simulation.Position
+import LambdaTrek.Simulation.Sector.Internal
 import LambdaTrek.Simulation.Station (Station (..))
 import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Tile (Tile)
 import qualified LambdaTrek.Simulation.Tile as Tile
 import Lens.Micro
-import Lens.Micro.TH
 
--- | Sectors are 15x15 tiled regions of space
+-- | Construct a valid 'Sector'.
 --
--- Be careful not to fill up the sector so there's nowhere to put/move
--- the ship! Leave at least one empty space!
-data Sector
-  = Sector
-  { sectorStars      :: [(Int, Int)]
-  , sectorEnemyShips :: Array Int Enemy
-  , sectorStations   :: Array Int Station
-  }
-  deriving (Eq, Ord, Show)
+-- A valid sector has at least one empty space at all times.  So that
+-- we have somewhere to put the player ship when they warp in.
+--
+-- The maximum number of @stars@, @enemies@, and @stations@ considered
+-- is 224 and they must be unique in position.
+sector :: [(Int, Int)] -> [Enemy] -> [Station] -> Either String Sector
+sector stars' enemies stations' =
+  let inputStars = take (15 * 15 - 1) stars'
+      validStars = nub inputStars
+      inputEnemies = take (15 * 15 - 1) enemies
+      validEnemies = nubBy (\ex ey -> getPosition ex == getPosition ey) inputEnemies
+      inputStations = stations'
+      validStations = nubBy (\sx sy -> getPosition sx == getPosition sy) inputStations
+      --s = Sector validStars (toEnemyArray enemies) (toStationArray stations')
+  in if length inputStars > length validStars
+     then Left "Duplicate stars" else
+       if length inputEnemies > length validEnemies
+       then Left "Enemy at duplicate position"
+       else
+         if length inputStations > length validStations
+         then Left "Station at duplication position"
+         else
+           let s = Sector validStars (toEnemyArray validEnemies) (toStationArray validStations)
+           in if hasAtLeastOneEmptySpace s
+              then Right s
+              else Left "Invalid sector" -- TODO: make this more informative
+  where
+    toEnemyArray :: [Enemy] -> Array Int Enemy
+    toEnemyArray es = listArray (0, length es - 1) es
 
-makeFields ''Sector
+    toStationArray :: [Station] -> Array Int Station
+    toStationArray ss = listArray (0, length ss - 1) ss
 
 emptySector :: Sector
 emptySector = Sector [] (listArray (0,0) [Enemy 8 3 20 10 Patrolling 10]) (listArray (0,0) [Station 9 1 100])
@@ -73,12 +113,11 @@ findEmpty = ixToCoord . fst . head . filter ((== Tile.EmptySpace) . toEnum . snd
       let w = 15
       in (x `div` w, x `rem` w)
 
-buildSectorTiles :: Ship -> Sector -> SectorTiles
-buildSectorTiles ship sector =
-  let starterTiles = unsafeSetTile (ship^.Ship.positionX) (ship^.Ship.positionY) Tile.PlayerShip emptySectorTiles
-      starTiles = foldl' addStar starterTiles $ sector^.stars
-      enemyTiles = foldl' addEnemy starTiles $ sector^.enemyShips
-  in foldl' addStation enemyTiles $ sector^.stations
+buildSectorTiles :: Sector -> SectorTiles
+buildSectorTiles sector' =
+  let starTiles = foldl' addStar emptySectorTiles $ sector'^.stars
+      enemyTiles = foldl' addEnemy starTiles $ sector'^.enemyShips
+  in foldl' addStation enemyTiles $ sector'^.stations
   where
     addStar :: SectorTiles -> (Int, Int) -> SectorTiles
     addStar tiles (x, y) =

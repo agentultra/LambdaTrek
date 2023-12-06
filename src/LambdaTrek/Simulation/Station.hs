@@ -1,9 +1,11 @@
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Station where
 
 import Lens.Micro.TH
+import LambdaTrek.Simulation.Position
 
 data Station
   = Station
@@ -12,5 +14,8 @@ data Station
   , stationEnergy :: Int
   }
   deriving (Eq, Ord, Show)
+
+instance HasPosition Station where
+  getPosition Station {..} = (stationPositionX, stationPositionY)
 
 makeFields ''Station

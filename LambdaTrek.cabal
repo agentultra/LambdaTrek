@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -36,8 +36,10 @@ library
       LambdaTrek.Simulation.Dialog
       LambdaTrek.Simulation.Enemy
       LambdaTrek.Simulation.Enemy.AI
+      LambdaTrek.Simulation.Position
       LambdaTrek.Simulation.Quadrant
       LambdaTrek.Simulation.Sector
+      LambdaTrek.Simulation.Sector.Internal
       LambdaTrek.Simulation.Ship
       LambdaTrek.Simulation.Station
       LambdaTrek.Simulation.Tile

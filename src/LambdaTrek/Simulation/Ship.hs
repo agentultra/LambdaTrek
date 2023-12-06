@@ -1,11 +1,13 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Ship where
 
 import Data.Text (Text)
+import LambdaTrek.Simulation.Position
 import Lens.Micro
 import Lens.Micro.TH
 
@@ -42,6 +44,9 @@ data Ship
   , shipWarpFactor     :: WarpFactor
   }
   deriving (Eq, Ord, Show)
+
+instance HasPosition Ship where
+  getPosition Ship {..} = (shipPositionX, shipPositionY)
 
 makeFields ''Ship
 

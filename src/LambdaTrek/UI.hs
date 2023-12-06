@@ -78,8 +78,9 @@ sectorDialog gameState = withVScrollBars OnRight . viewport SectorDialog Vertica
 sectorDisplay :: GameState -> Widget Name
 sectorDisplay gameState =
   let sector = Quadrant.getSector (gameState^.gameStateQuadrant) $ gameState^.gameStateSector
-      ship = gameState^.gameStateShip
-      sectorTiles = Sector.buildSectorTiles ship sector
+      -- TODO: add ship back in
+      --ship = gameState^.gameStateShip
+      sectorTiles = Sector.buildSectorTiles sector
   in (center . str . Text.unpack . Sector.render $ sectorTiles)
        <=> hBorder
        <=> vLimit 5 (sectorDialog gameState)
