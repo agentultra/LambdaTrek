@@ -38,6 +38,7 @@ library
       LambdaTrek.Simulation.Enemy.AI
       LambdaTrek.Simulation.Position
       LambdaTrek.Simulation.Quadrant
+      LambdaTrek.Simulation.Quadrant.Generate
       LambdaTrek.Simulation.Sector
       LambdaTrek.Simulation.Sector.Internal
       LambdaTrek.Simulation.Ship

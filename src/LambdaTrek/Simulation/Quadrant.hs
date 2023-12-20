@@ -22,10 +22,10 @@ import Lens.Micro.TH
 
 data Quadrant
   = Quadrant
-  { _quadrantStars :: Map (Int, Int) [(Int, Int)]
+  { _quadrantStars      :: Map (Int, Int) [(Int, Int)]
   , _quadrantEnemyShips :: Map (Int, Int) (Array Int Enemy)
-  , _quadrantStations :: Map (Int, Int) (Array Int Station)
-  , _quadrantScanState :: Map (Int, Int) Bool
+  , _quadrantStations   :: Map (Int, Int) (Array Int Station)
+  , _quadrantScanState  :: Map (Int, Int) Bool
   }
   deriving (Eq, Show)
 

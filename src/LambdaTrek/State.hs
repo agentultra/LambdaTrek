@@ -8,6 +8,7 @@ import Data.Text (Text)
 import LambdaTrek.Command
 import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Quadrant
+import LambdaTrek.Simulation.Quadrant.Generate
 import LambdaTrek.Simulation.Ship
 import Lens.Micro
 import Lens.Micro.Mtl
@@ -38,19 +39,21 @@ data GameState
 makeLenses ''GameState
 
 initialGameState :: StdGen -> GameState
-initialGameState gen
-  = GameState
-  { _gameStateCommandInput = ""
-  , _gameStateCommand = Nothing
-  , _gameStateCommandError = Nothing
-  , _gameStateQuadrant = initQuadrant (0, 0)
-  , _gameStateSector = (0, 0)
-  , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
-  , _gameStateRemainingTurns = 200
-  , _gameStateDialog = []
-  , _gameStateRandomGen = gen
-  , _gameStateScreen = SectorScreen
-  }
+initialGameState gen =
+  let (quadrant, GenerationState gen') =
+        (`runState` GenerationState gen) generateQuadrant
+  in GameState
+     { _gameStateCommandInput = ""
+     , _gameStateCommand = Nothing
+     , _gameStateCommandError = Nothing
+     , _gameStateQuadrant = quadrant
+     , _gameStateSector = (0, 0)
+     , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
+     , _gameStateRemainingTurns = 200
+     , _gameStateDialog = []
+     , _gameStateRandomGen = gen'
+     , _gameStateScreen = SectorScreen
+     }
 
 say :: Crewmate -> Text -> [Dialog] -> [Dialog]
 say crewmate msg dialogs = Dialog crewmate msg : dialogs
