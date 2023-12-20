@@ -35,6 +35,7 @@ import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Position
 import LambdaTrek.Simulation.Sector.Internal
+import LambdaTrek.Simulation.Ship (Ship (..))
 import LambdaTrek.Simulation.Station (Station (..))
 import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Tile (Tile)
@@ -133,15 +134,16 @@ buildSectorTiles sector' =
     addStation :: SectorTiles -> Station -> SectorTiles
     addStation tiles station = unsafeSetTile (station^.Station.positionX) (station^.Station.positionY) Tile.Station tiles
 
-render :: SectorTiles -> Text
-render sector =
-  let sectorData = getSectorTiles sector
+render :: Ship -> SectorTiles -> Text
+render ship sectorTiles =
+  let (shipX, shipY) = getPosition ship
+      sectorTileArray = getSectorTiles . unsafeSetTile shipX shipY Tile.PlayerShip $ sectorTiles
   in Text.intercalate "\n"
      . map Text.concat
      . chunksOf 15
      . map (Tile.render . toEnum)
      . elems
-     $ sectorData
+     $ sectorTileArray
 
 aliveEnemies :: Sector -> [(Int, Enemy)]
 aliveEnemies = filter (isAlive . snd) . assocs . sectorEnemyShips
