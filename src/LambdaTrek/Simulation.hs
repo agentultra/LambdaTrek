@@ -271,11 +271,18 @@ handleWarp warpX warpY = do
       dist = distance currentSector (warpX, warpY)
       energyConsumed = (2 ^ dist) * Ship.warpFactorNumeral warpFactor
       coord = (warpX, warpY)
-  gameStateSector .= coord
   if energyConsumed <= ship^.Ship.energy
     then do
+    gameStateSector .= coord
+
+    quadrant <- use gameStateQuadrant
+    let sector' = Q.getSector quadrant coord
+        (safeTileX, safeTileY) = findEmpty . buildSectorTiles $ sector'
+
     zoom gameStateShip $ do
       Ship.energy -= energyConsumed
+      Ship.positionX .= safeTileX
+      Ship.positionY .= safeTileY
     gameStateQuadrant %= Q.scanQuadrant coord
     sayDialog Helm
       $ "Aye captain, setting course for sector "
@@ -292,8 +299,8 @@ handleWarp warpX warpY = do
 
 updateEnemyStates :: State GameState ()
 updateEnemyStates = do
-  sector <- getCurrentSector
-  forM_ (aliveEnemies sector) updateEnemyState
+  sector' <- getCurrentSector
+  forM_ (aliveEnemies sector') updateEnemyState
 
 updateEnemyState :: (Int, Enemy) -> State GameState ()
 updateEnemyState e@(_, Enemy {..}) =
@@ -321,8 +328,8 @@ updateEnemyFighting (enemyIx, enemy) = do
 
 handleEnemies :: State GameState ()
 handleEnemies = do
-  sector <- getCurrentSector
-  forM_ (aliveEnemies sector) handleEnemy
+  sector' <- getCurrentSector
+  forM_ (aliveEnemies sector') handleEnemy
 
 handleEnemy :: (Int, Enemy) -> State GameState ()
 handleEnemy e@(_, Enemy {..}) = case enemyState of
