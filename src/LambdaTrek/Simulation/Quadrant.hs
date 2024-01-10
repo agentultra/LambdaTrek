@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module LambdaTrek.Simulation.Quadrant where
@@ -31,6 +32,22 @@ data Quadrant
 
 quadrantCoords :: [(Int, Int)]
 quadrantCoords = [(x, y) | x <- [0..3], y <- [0..3]]
+
+addStar :: (Int, Int) -> (Int, Int) -> Quadrant -> Maybe Quadrant
+addStar sectorCoord starCoord quadrant
+  | availableSpace quadrant sectorCoord = Just
+    quadrant { _quadrantStars = M.adjust ((:) starCoord) sectorCoord quadrant._quadrantStars }
+  | otherwise = Nothing
+
+addEnemy :: (Int, Int) -> Enemy -> Quadrant -> Maybe Quadrant
+addEnemy = undefined
+
+addStation :: (Int, Int) -> Station -> Quadrant -> Maybe Quadrant
+addStation = undefined
+
+-- TODO (james): actually implement this
+availableSpace :: Quadrant -> (Int, Int) -> Bool
+availableSpace _ = const True
 
 initQuadrant :: (Int, Int) -> Quadrant
 initQuadrant startingCoord =
