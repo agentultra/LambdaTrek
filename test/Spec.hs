@@ -83,6 +83,7 @@ main = hspec $ do
                 = (initialGameState gen)
                 { _gameStateShip = Ship 8 1 0 6 10 ShieldsDown 0.75 5 WarpFactorOne
                 , _gameStateCommand = Just Dock
+                , _gameStateQuadrant = initQuadrant (8, 1)
                 }
               nextState = (`execState` depletedShipState) updateSimulation
           nextState^.(gameStateShip . energy) `shouldBe` 100
@@ -94,6 +95,7 @@ main = hspec $ do
                 = (initialGameState gen)
                 { _gameStateShip = Ship 0 0 0 6 10 ShieldsDown 0.75 5 WarpFactorOne
                 , _gameStateCommand = Just Dock
+                , _gameStateQuadrant = initQuadrant (0, 0)
                 }
               nextState = (`execState` depletedShipState) updateSimulation
 
@@ -106,6 +108,7 @@ main = hspec $ do
                 = (initialGameState gen)
                 { _gameStateShip = Ship 0 0 100 6 10 ShieldsDown 0.75 5 WarpFactorOne
                 , _gameStateCommand = Just $ EngineMove 7 3
+                , _gameStateQuadrant = initQuadrant (0, 0)
                 }
               nextState = (`execState` initialState) updateSimulation
               nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
@@ -278,6 +281,7 @@ main = hspec $ do
               = (initialGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
               , _gameStateCommand = Just (EngineMove 14 14)
+              , _gameStateQuadrant = initQuadrant (0, 0)
               }
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
@@ -303,6 +307,7 @@ main = hspec $ do
               = (initialGameState gen)
               { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
               , _gameStateCommand = Just (EngineMove 7 3)
+              , _gameStateQuadrant = initQuadrant (14, 14)
               }
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
@@ -315,6 +320,7 @@ main = hspec $ do
               = (initialGameState gen)
               { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
               , _gameStateCommand = Just (EngineMove 7 3)
+              , _gameStateQuadrant = initQuadrant (14, 14)
               }
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
