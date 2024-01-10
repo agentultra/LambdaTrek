@@ -13,7 +13,6 @@ module LambdaTrek.Simulation.Sector
   , -- * Functions
     aliveEnemies
   , buildSectorTiles
-  , emptySector
   , emptySectorTiles
   , enemyAtCoord
   , findEmpty
@@ -76,9 +75,6 @@ sector stars' enemies stations' =
 
     toStationArray :: [Station] -> Array Int Station
     toStationArray ss = listArray (0, length ss - 1) ss
-
-emptySector :: Sector
-emptySector = Sector [] (listArray (0,0) [Enemy 8 3 20 10 Patrolling 10]) (listArray (0,0) [Station 9 1 100])
 
 newtype SectorTiles = SectorTiles { getSectorTiles :: Array Int Int }
   deriving (Eq, Ord, Show)
