@@ -24,7 +24,7 @@ import Lens.Micro.TH
 data Quadrant
   = Quadrant
   { _quadrantStars      :: Map (Int, Int) [(Int, Int)]
-  , _quadrantEnemyShips :: Map (Int, Int) (Array Int Enemy)
+  , _quadrantEnemyShips :: Map (Int, Int) [Enemy]
   , _quadrantStations   :: Map (Int, Int) (Array Int Station)
   , _quadrantScanState  :: Map (Int, Int) Bool
   }
@@ -56,7 +56,7 @@ initQuadrant startingCoord =
         [ (coord, [(10, 10)]) | coord <- quadrantCoords ]
       sectorEnemyShipMap
         = M.fromList
-        [ (coord, if coord == (0, 0) then listArray (0,0) [Enemy 8 3 20 10 Patrolling 10] else listArray (0, -1) [])
+        [ (coord, if coord == (0, 0) then [Enemy 8 3 20 10 Patrolling 10] else [])
         | coord <- quadrantCoords
         ]
       sectorStationMap
@@ -76,12 +76,16 @@ getSector Quadrant {..} sectorCoord =
   let stars' = _quadrantStars ! sectorCoord
       enemies = _quadrantEnemyShips ! sectorCoord
       stations' = _quadrantStations ! sectorCoord
-  in Sector stars' enemies stations'
+      arrEnemies = toEnemyArray enemies
+  in Sector stars' arrEnemies stations'
+
+toEnemyArray :: [Enemy] -> Array Int Enemy
+toEnemyArray enemies = listArray (0, length enemies - 1) enemies
 
 updateSector :: Quadrant -> (Int, Int) -> Sector -> Quadrant
 updateSector quadrant sectorCoord Sector {..} =
   quadrant { _quadrantStars = M.adjust (const sectorStars) sectorCoord (_quadrantStars quadrant)
-           , _quadrantEnemyShips = M.adjust (const sectorEnemyShips) sectorCoord (_quadrantEnemyShips quadrant)
+           , _quadrantEnemyShips = M.adjust (const $ elems sectorEnemyShips) sectorCoord (_quadrantEnemyShips quadrant)
            , _quadrantStations = M.adjust (const sectorStations) sectorCoord (_quadrantStations quadrant)
            }
 

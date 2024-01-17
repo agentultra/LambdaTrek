@@ -293,7 +293,7 @@ main = hspec $ do
         let initialState
               = (initialGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
-              , _gameStateQuadrant = (initQuadrant (0, 0)) { _quadrantEnemyShips = M.singleton (0, 0) (Array.listArray (0,0) [Enemy 8 3 0 10 Patrolling 10]) }
+              , _gameStateQuadrant = (initQuadrant (0, 0)) { _quadrantEnemyShips = M.singleton (0, 0) [Enemy 8 3 0 10 Patrolling 10] }
               , _gameStateSector = (0, 0)
               , _gameStateCommand = Just (EngineMove 7 3)
               }
@@ -312,7 +312,7 @@ main = hspec $ do
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
             (Just enemy) = Array.elems (nextSector^.enemyShips) ^? ix 0
-        enemy^.(Enemy.state) `shouldBe` Fighting
+        enemy^.Enemy.state `shouldBe` Fighting
 
     context "When in the Fighting state" $ do
       it "should transition to patrolling when the player moves out of range" $ do

@@ -5,8 +5,9 @@
 module LambdaTrek.Simulation.Combat where
 
 import Control.Monad.State
-import Data.Array
+import Data.Array hiding ((//))
 import qualified Data.Array as Array
+import qualified Data.List as L
 import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -20,6 +21,7 @@ import qualified LambdaTrek.Simulation.Quadrant as Q
 import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Ship (Ship (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
+import LambdaTrek.Utils.List
 import Lens.Micro
 import Lens.Micro.Mtl
 import System.Random
@@ -48,7 +50,7 @@ doFire energyAmt enemies PhaserAutomatic = do
   currentSector <- use gameStateSector
   zoom gameStateQuadrant $ do
     Q.quadrantEnemyShips %= \enemyShipMap ->
-      M.adjust (\ships -> ships Array.// map resultToEnemyIx damagedEnemies) currentSector enemyShipMap
+      M.adjust (\ships -> ships // map resultToEnemyIx damagedEnemies) currentSector enemyShipMap
   x <- forM damagedEnemies $ \PhaserDamageResult {..} ->
     if Enemy.isDestroyed _phaserDamageReportEnemy
     then sayDialog Combat "Enemy ship destroyed, captain!"
@@ -97,18 +99,18 @@ getEnemiesInPhaserRange = do
   Ship {..} <- use gameStateShip
   quadrant <- use gameStateQuadrant
   currentSector <- use gameStateSector
-  let sector = Q.getSector quadrant currentSector
+  let sector' = Q.getSector quadrant currentSector
       rangeBoxCorner = ( max 0 (shipPositionX - (shipPhaserRange `div` 2))
                        , max 0 (shipPositionY - (shipPhaserRange `div` 2)))
       rangeBoxOffset = (shipPhaserRange, shipPhaserRange)
-  pure . enemiesInRange rangeBoxCorner rangeBoxOffset $ sector^.enemyShips
+  pure . enemiesInRange rangeBoxCorner rangeBoxOffset $ sector'^.enemyShips
 
 handleFireTorpedo :: Int -> [(Int, Int)] -> State GameState CommandResult
 handleFireTorpedo num coords = do
   ship <- use gameStateShip
   quadrant <- use gameStateQuadrant
   currentSector <- use gameStateSector
-  let sector = Q.getSector quadrant currentSector
+  let sector' = Q.getSector quadrant currentSector
   case compare num (ship^.Ship.torpedos) of
     GT -> do
       sayDialog Combat
@@ -119,7 +121,7 @@ handleFireTorpedo num coords = do
     _ -> do
       sayDialog Combat "Aye, firing torpedos"
       forM_ coords $ \coord -> do
-        case enemyAtCoord coord sector of
+        case enemyAtCoord coord sector' of
           Nothing -> do
             sayDialog Combat
               $ "Torpedo detonated at "
@@ -139,7 +141,7 @@ handleFireTorpedo num coords = do
                   else enemy
             zoom gameStateQuadrant $ do
               Q.quadrantEnemyShips %= \enemiesMap ->
-                M.adjust (\enemies -> enemies Array.// [(enemyIx, damagedEnemy)]) currentSector enemiesMap
+                M.adjust (\enemies -> enemies // [(enemyIx, damagedEnemy)]) currentSector enemiesMap
       zoom gameStateShip $
         Ship.torpedos %= \currentAmt -> currentAmt - num
       pure Performed

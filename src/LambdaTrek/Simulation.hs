@@ -26,6 +26,7 @@ import qualified LambdaTrek.Simulation.Station as Station
 import LambdaTrek.Simulation.Ship (Ship (..), ShieldState (..), WarpFactor (..))
 import qualified LambdaTrek.Simulation.Ship as Ship
 import LambdaTrek.State
+import LambdaTrek.Utils.List
 import Lens.Micro
 import Lens.Micro.Mtl
 
@@ -118,7 +119,7 @@ handleEnemyCollisions x y = do
   quadrantEnemyShipMap <- use (gameStateQuadrant . Q.quadrantEnemyShips)
   currentSector <- use gameStateSector
   let enemies_ = quadrantEnemyShipMap ! currentSector
-  case collidesWithEnemies (Array.elems enemies_) x y of
+  case collidesWithEnemies enemies_ x y of
     Just e | Enemy.isDestroyed e -> do
                sayDialog Helm
                  ( "Captain, we would collide directly with volatile ship debris at ("
@@ -315,7 +316,7 @@ updateEnemyPatrolling (enemyIx, enemy) = do
   when (inRange enemy playerShip Enemy.enemyRange) $ do
     zoom gameStateQuadrant $ do
       Q.quadrantEnemyShips %= \enemyShipMap ->
-        M.adjust (\enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Fighting )]) currentSector enemyShipMap
+        M.adjust (\enemies -> enemies // [(enemyIx, enemy & Enemy.state .~ Fighting )]) currentSector enemyShipMap
 
 updateEnemyFighting :: (Int, Enemy) -> State GameState ()
 updateEnemyFighting (enemyIx, enemy) = do
@@ -324,7 +325,7 @@ updateEnemyFighting (enemyIx, enemy) = do
   unless (inRange enemy ship Enemy.enemyRange) $ do
     zoom gameStateQuadrant $ do
       Q.quadrantEnemyShips %= \enemyShipMap ->
-        M.adjust (\enemies -> enemies Array.// [(enemyIx, enemy & Enemy.state .~ Patrolling)]) currentSector enemyShipMap
+        M.adjust (\enemies -> enemies // [(enemyIx, enemy & Enemy.state .~ Patrolling)]) currentSector enemyShipMap
 
 handleEnemies :: State GameState ()
 handleEnemies = do
