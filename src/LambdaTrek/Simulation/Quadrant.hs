@@ -40,7 +40,10 @@ addStar sectorCoord starCoord quadrant
   | otherwise = Nothing
 
 addEnemy :: (Int, Int) -> Enemy -> Quadrant -> Maybe Quadrant
-addEnemy = undefined
+addEnemy sectorCoord enemy quadrant
+  | availableSpace quadrant sectorCoord = Just
+    quadrant { _quadrantEnemyShips = M.adjust ((:) enemy) sectorCoord quadrant._quadrantEnemyShips }
+  | otherwise = Nothing
 
 addStation :: (Int, Int) -> Station -> Quadrant -> Maybe Quadrant
 addStation = undefined
