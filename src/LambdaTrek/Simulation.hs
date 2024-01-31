@@ -5,7 +5,6 @@
 module LambdaTrek.Simulation where
 
 import Control.Monad.State
-import qualified Data.Array as Array
 import qualified Data.List as List
 import Data.Map ((!))
 import qualified Data.Map as M
@@ -148,7 +147,7 @@ handleStationCollisions x y = do
   quadrantStationMap <- use (gameStateQuadrant . Q.quadrantStations)
   currentSector <- use gameStateSector
   let stations_ = quadrantStationMap ! currentSector
-  case collidesWithStations (Array.elems stations_) x y of
+  case collidesWithStations stations_ x y of
     Just _ -> do
       sayDialog Helm
         ( "Captain, we would collide with the station at ("
@@ -191,7 +190,7 @@ handleDocking = do
       ship <- use gameStateShip
       quadrantStationMap <- use (gameStateQuadrant . Q.quadrantStations)
       currentSector <- use gameStateSector
-      let sectorStations' = Array.elems (quadrantStationMap ! currentSector)
+      let sectorStations' = quadrantStationMap ! currentSector
       pure . List.find (isAdjacent ship) $ sectorStations'
 
     isAdjacent :: Ship -> Station -> Bool

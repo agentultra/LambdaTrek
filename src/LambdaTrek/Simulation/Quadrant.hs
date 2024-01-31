@@ -25,7 +25,7 @@ data Quadrant
   = Quadrant
   { _quadrantStars      :: Map (Int, Int) [(Int, Int)]
   , _quadrantEnemyShips :: Map (Int, Int) [Enemy]
-  , _quadrantStations   :: Map (Int, Int) (Array Int Station)
+  , _quadrantStations   :: Map (Int, Int) [Station]
   , _quadrantScanState  :: Map (Int, Int) Bool
   }
   deriving (Eq, Show)
@@ -64,7 +64,7 @@ initQuadrant startingCoord =
         ]
       sectorStationMap
         = M.fromList
-        [ (coord, listArray (0,0) [Station 9 1 100])
+        [ (coord, [Station 9 1 100])
         | coord <- quadrantCoords
         ]
   in Quadrant
@@ -79,17 +79,18 @@ getSector Quadrant {..} sectorCoord =
   let stars' = _quadrantStars ! sectorCoord
       enemies = _quadrantEnemyShips ! sectorCoord
       stations' = _quadrantStations ! sectorCoord
-      arrEnemies = toEnemyArray enemies
-  in Sector stars' arrEnemies stations'
+      arrEnemies = toArray enemies
+      arrStation = toArray stations'
+  in Sector stars' arrEnemies arrStation
 
-toEnemyArray :: [Enemy] -> Array Int Enemy
-toEnemyArray enemies = listArray (0, length enemies - 1) enemies
+toArray :: [a] -> Array Int a
+toArray xs = listArray (0, length xs - 1) xs
 
 updateSector :: Quadrant -> (Int, Int) -> Sector -> Quadrant
 updateSector quadrant sectorCoord Sector {..} =
   quadrant { _quadrantStars = M.adjust (const sectorStars) sectorCoord (_quadrantStars quadrant)
            , _quadrantEnemyShips = M.adjust (const $ elems sectorEnemyShips) sectorCoord (_quadrantEnemyShips quadrant)
-           , _quadrantStations = M.adjust (const sectorStations) sectorCoord (_quadrantStations quadrant)
+           , _quadrantStations = M.adjust (const $ elems sectorStations) sectorCoord (_quadrantStations quadrant)
            }
 
 scanQuadrant :: (Int, Int) -> Quadrant -> Quadrant
