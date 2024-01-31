@@ -26,6 +26,44 @@ import Test.Hspec
 import System.Random
 import Lens.Micro
 
+initialTestGameState :: StdGen -> GameState
+initialTestGameState gen =
+  GameState
+  { _gameStateCommandInput = ""
+  , _gameStateCommand = Nothing
+  , _gameStateCommandError = Nothing
+  , _gameStateQuadrant = initTestQuadrant (0, 0)
+  , _gameStateSector = (0, 0)
+  , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
+  , _gameStateRemainingTurns = 200
+  , _gameStateDialog = []
+  , _gameStateRandomGen = gen
+  , _gameStateScreen = SectorScreen
+  , _gameStateGameConfig = GameConfig { _gameConfigNumEnemies = 15 }
+  }
+
+initTestQuadrant :: (Int, Int) -> Quadrant
+initTestQuadrant startingCoord =
+  let sectorStarMap
+        = M.fromList
+        [ (coord, [(10, 10)]) | coord <- quadrantCoords ]
+      sectorEnemyShipMap
+        = M.fromList
+        [ (coord, if coord == (0, 0) then [Enemy 8 3 20 10 Patrolling 10] else [])
+        | coord <- quadrantCoords
+        ]
+      sectorStationMap
+        = M.fromList
+        [ (coord, [Station.Station 9 1 100])
+        | coord <- quadrantCoords
+        ]
+  in Quadrant
+     { _quadrantStars = sectorStarMap
+     , _quadrantEnemyShips = sectorEnemyShipMap
+     , _quadrantStations = sectorStationMap
+     , _quadrantScanState = M.singleton startingCoord True
+     }
+
 main :: IO ()
 main = hspec $ do
   describe "LambdaTrek.Command.Parse" $ do
@@ -62,7 +100,7 @@ main = hspec $ do
     describe "updateSimulation" $ do
       let gen = mkStdGen 0
       it "is basically the id function when there is no command" $ do
-        let initGameState = initialGameState gen
+        let initGameState = initialTestGameState gen
         ((`execState` initGameState) updateSimulation)
           `shouldBe`
           initGameState
@@ -70,7 +108,7 @@ main = hspec $ do
       context "a valid EngineMove command" $ do
         it "should move the ship to the empty space" $ do
           let stateWithValidMoveCommand
-                = (initialGameState gen)
+                = (initialTestGameState gen)
                 { _gameStateCommand = Just $ EngineMove 8 10
                 }
               nextState = (`execState` stateWithValidMoveCommand) updateSimulation
@@ -80,10 +118,10 @@ main = hspec $ do
       context "a Dock command" $ do
         it "should recharge the ship energy when next to a station" $ do
           let depletedShipState
-                = (initialGameState gen)
+                = (initialTestGameState gen)
                 { _gameStateShip = Ship 8 1 0 6 10 ShieldsDown 0.75 5 WarpFactorOne
                 , _gameStateCommand = Just Dock
-                , _gameStateQuadrant = initQuadrant (8, 1)
+                , _gameStateQuadrant = initTestQuadrant (8, 1)
                 }
               nextState = (`execState` depletedShipState) updateSimulation
           nextState^.(gameStateShip . energy) `shouldBe` 100
@@ -92,10 +130,10 @@ main = hspec $ do
 
         it "should not recharge the ship when not adjacent to a station" $ do
           let depletedShipState
-                = (initialGameState gen)
+                = (initialTestGameState gen)
                 { _gameStateShip = Ship 0 0 0 6 10 ShieldsDown 0.75 5 WarpFactorOne
                 , _gameStateCommand = Just Dock
-                , _gameStateQuadrant = initQuadrant (0, 0)
+                , _gameStateQuadrant = initTestQuadrant (0, 0)
                 }
               nextState = (`execState` depletedShipState) updateSimulation
 
@@ -105,10 +143,10 @@ main = hspec $ do
       context "When the player ship is in range of a enemy in Fighting state" $ do
         it "should damage the player ship" $ do
           let initialState
-                = (initialGameState gen)
+                = (initialTestGameState gen)
                 { _gameStateShip = Ship 0 0 100 6 10 ShieldsDown 0.75 5 WarpFactorOne
                 , _gameStateCommand = Just $ EngineMove 7 3
-                , _gameStateQuadrant = initQuadrant (0, 0)
+                , _gameStateQuadrant = initTestQuadrant (0, 0)
                 }
               nextState = (`execState` initialState) updateSimulation
               nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
@@ -151,7 +189,7 @@ main = hspec $ do
           [(0, Enemy 1 1 1 0 Patrolling 10), (1, Enemy 4 4 1 0 Patrolling 10)]
 
     describe "calculateEnemyPhaserDamage" $ do
-      let initState = initialGameState (mkStdGen 0)
+      let initState = initialTestGameState (mkStdGen 0)
 
       -- The `amt` parameter to 'calculateEnemyPhaserDamage' is a
       -- positive integer > 0 as defined by the PHASER command from
@@ -278,10 +316,10 @@ main = hspec $ do
     context "When in the Patrolling state" $ do
       it "should do nothing when the player ship is out of range" $ do
         let initialState
-              = (initialGameState gen)
+              = (initialTestGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
               , _gameStateCommand = Just (EngineMove 14 14)
-              , _gameStateQuadrant = initQuadrant (0, 0)
+              , _gameStateQuadrant = initTestQuadrant (0, 0)
               }
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
@@ -291,9 +329,9 @@ main = hspec $ do
       it "should do nothing if the enemy is destroyed" $ do
         -- emptySector { sectorEnemyShips =  }
         let initialState
-              = (initialGameState gen)
+              = (initialTestGameState gen)
               { _gameStateShip = Ship 0 0 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
-              , _gameStateQuadrant = (initQuadrant (0, 0)) { _quadrantEnemyShips = M.singleton (0, 0) [Enemy 8 3 0 10 Patrolling 10] }
+              , _gameStateQuadrant = (initTestQuadrant (0, 0)) { _quadrantEnemyShips = M.singleton (0, 0) [Enemy 8 3 0 10 Patrolling 10] }
               , _gameStateSector = (0, 0)
               , _gameStateCommand = Just (EngineMove 7 3)
               }
@@ -304,10 +342,10 @@ main = hspec $ do
 
       it "should change to Fighting when the player ship is in range" $ do
         let initialState
-              = (initialGameState gen)
+              = (initialTestGameState gen)
               { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
               , _gameStateCommand = Just (EngineMove 7 3)
-              , _gameStateQuadrant = initQuadrant (14, 14)
+              , _gameStateQuadrant = initTestQuadrant (14, 14)
               }
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)
@@ -317,10 +355,10 @@ main = hspec $ do
     context "When in the Fighting state" $ do
       it "should transition to patrolling when the player moves out of range" $ do
         let initialState
-              = (initialGameState gen)
+              = (initialTestGameState gen)
               { _gameStateShip = Ship 14 14 6 100 10 ShieldsDown 0.75 5 WarpFactorOne
               , _gameStateCommand = Just (EngineMove 7 3)
-              , _gameStateQuadrant = initQuadrant (14, 14)
+              , _gameStateQuadrant = initTestQuadrant (14, 14)
               }
             nextState = (`execState` initialState) updateSimulation
             nextSector = getSector (nextState^.gameStateQuadrant) (nextState^.gameStateSector)

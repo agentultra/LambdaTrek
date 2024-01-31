@@ -16,7 +16,6 @@ import qualified Data.Text as T
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import LambdaTrek.Simulation.Enemy
-import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Sector.Internal
 import LambdaTrek.Simulation.Station
 import Lens.Micro.TH
@@ -46,7 +45,10 @@ addEnemy sectorCoord enemy quadrant
   | otherwise = Nothing
 
 addStation :: (Int, Int) -> Station -> Quadrant -> Maybe Quadrant
-addStation = undefined
+addStation sectorCoord station quadrant
+  | availableSpace quadrant sectorCoord = Just
+    quadrant { _quadrantStations = M.adjust ((:) station) sectorCoord quadrant._quadrantStations }
+  | otherwise = Nothing
 
 -- TODO (james): actually implement this
 availableSpace :: Quadrant -> (Int, Int) -> Bool
@@ -56,15 +58,17 @@ initQuadrant :: (Int, Int) -> Quadrant
 initQuadrant startingCoord =
   let sectorStarMap
         = M.fromList
-        [ (coord, [(10, 10)]) | coord <- quadrantCoords ]
+        [ (coord, [])
+        | coord <- quadrantCoords
+        ]
       sectorEnemyShipMap
         = M.fromList
-        [ (coord, if coord == (0, 0) then [Enemy 8 3 20 10 Patrolling 10] else [])
+        [ (coord, [])
         | coord <- quadrantCoords
         ]
       sectorStationMap
         = M.fromList
-        [ (coord, [Station 9 1 100])
+        [ (coord, [])
         | coord <- quadrantCoords
         ]
   in Quadrant

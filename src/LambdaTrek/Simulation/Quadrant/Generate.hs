@@ -3,21 +3,21 @@
 
 module LambdaTrek.Simulation.Quadrant.Generate where
 
+import Control.Monad
 import Control.Monad.State
-import Data.Array
 import Data.Foldable
-import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
 import System.Random
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Quadrant
+import LambdaTrek.Simulation.Sector
 import LambdaTrek.Simulation.Station
 
 data GenerationState
   = GenerationState
-  { generationRandomGen :: StdGen
-  , generationQuadrant  :: Quadrant
+  { generationRandomGen   :: StdGen
+  , generationQuadrant    :: Quadrant
+  , generationStationsMax :: Int
   }
 
 genRandom :: State GenerationState Int
@@ -33,6 +33,12 @@ genRandomBetween bs = do
   let (x, gen') = uniformR bs genState.generationRandomGen
   put $ genState { generationRandomGen = gen' }
   pure x
+
+genPickRandom :: [a] -> State GenerationState (Maybe a)
+genPickRandom [] = pure Nothing
+genPickRandom xs = do
+  randomIx <- genRandomBetween (0, length xs)
+  pure $ Just (xs !! randomIx)
 
 addSectorStar :: (Int, Int) -> (Int, Int) -> State GenerationState (Maybe (Int, Int))
 addSectorStar sectorCoord starCoord = do
@@ -52,12 +58,23 @@ addSectorEnemy sectorCoord enemy = do
       put $ genState { generationQuadrant = quadrant }
       pure $ Just enemy
 
+addSectorStation :: (Int, Int) -> Station -> State GenerationState (Maybe Station)
+addSectorStation sectorCoord station = do
+  genState@GenerationState {..} <- get
+  case addStation sectorCoord station generationQuadrant of
+    Nothing -> pure Nothing
+    Just quadrant -> do
+      put $ genState { generationQuadrant = quadrant }
+      pure $ Just station
+
 generateQuadrant :: (Int, Int) -> StdGen -> (Quadrant, StdGen)
 generateQuadrant shipStartingCoord randGen =
   let GenerationState {..} =
-        (`execState` (GenerationState randGen (initQuadrant shipStartingCoord))) $ do
+        -- TODO (james): move the max num stations to a param
+        (`execState` (GenerationState randGen (initQuadrant shipStartingCoord)) 2) $ do
         generateQuadrantStars
         generateQuadrantEnemyShips
+        generateStations
   in (generationQuadrant, generationRandomGen)
 
 generateQuadrantStars :: State GenerationState ()
@@ -94,7 +111,30 @@ generateEnemyShips coord = do
 
     addSectorEnemy coord enemy
 
-generateStations :: State GenerationState (Map (Int, Int) (Array Int Station))
-generateStations = pure $ Map.fromList [(coord, emptyStationArray) | coord <- quadrantCoords]
-  where
-    emptyStationArray = listArray (0, -1) []
+generateStations :: State GenerationState ()
+generateStations = do
+  goGenerateStations 0 $ cycle quadrantCoords
+
+goGenerateStations :: Int -> [(Int, Int)] -> State GenerationState ()
+goGenerateStations _ [] = pure ()
+goGenerateStations stationCount (sectorCoord:coords) = do
+  GenerationState {..} <- get
+  when (stationCount /= generationStationsMax) $ do
+    stationPlacementChance <- genRandomBetween (0, 1)
+    if stationPlacementChance == 1
+      then placeStation sectorCoord >> goGenerateStations (stationCount + 1) coords
+      else goGenerateStations stationCount coords
+  pure ()
+
+placeStation :: (Int, Int) -> State GenerationState ()
+placeStation sectorCoord = do
+  -- TODO (james) randomize the station position from the empty sector positions.
+  quadrant <- generationQuadrant <$> get
+  let sector' = getSector quadrant sectorCoord
+  maybePosition <- genPickRandom $ emptyCoords sector'
+  case maybePosition of
+    Nothing -> pure ()
+    Just (stationX, stationY) -> do
+      let station = Station stationX stationY 100
+      _ <- addSectorStation sectorCoord station
+      pure ()

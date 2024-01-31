@@ -7,6 +7,7 @@ module LambdaTrek.Simulation.Sector.Internal where
 
 import Data.Array
 import LambdaTrek.Simulation.Enemy
+import LambdaTrek.Simulation.Position
 import LambdaTrek.Simulation.Station (Station (..))
 import Lens.Micro.TH
 
@@ -39,3 +40,14 @@ hasAtLeastOneEmptySpace sector =
       numEnemies = length $ listEnemies sector
       numStations = length $ listStations sector
   in numStars + numEnemies + numStations <= 15 * 15 - 1
+
+sectorCoords :: [(Int, Int)]
+sectorCoords = [ (x, y) | x <- [0..14], y <- [0..14] ]
+
+emptyCoords :: Sector -> [(Int, Int)]
+emptyCoords Sector {..} =
+  [ coord | coord <- sectorCoords
+          , coord `notElem` sectorStars
+          , coord `notElem` (getPosition <$> elems sectorEnemyShips)
+          , coord `notElem` (getPosition <$> elems sectorStations)
+  ]

@@ -13,6 +13,7 @@ module LambdaTrek.Simulation.Sector
   , -- * Functions
     aliveEnemies
   , buildSectorTiles
+  , emptyCoords
   , emptySectorTiles
   , enemyAtCoord
   , findEmpty
@@ -31,7 +32,6 @@ import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as Text
 import LambdaTrek.Simulation.Enemy
-import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Position
 import LambdaTrek.Simulation.Sector.Internal
 import LambdaTrek.Simulation.Ship (Ship (..))
