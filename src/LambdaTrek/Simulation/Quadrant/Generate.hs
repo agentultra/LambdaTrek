@@ -7,6 +7,7 @@ import Control.Monad
 import Control.Monad.State
 import Data.Foldable
 import System.Random
+import LambdaTrek.Config
 import LambdaTrek.Simulation.Enemy
 import LambdaTrek.Simulation.Enemy.AI
 import LambdaTrek.Simulation.Quadrant
@@ -20,6 +21,16 @@ data GenerationState
   , generationStationsMax      :: Int
   , generationEnemiesMax       :: Int -- ^ The max number of enemies to place in the Quadrant
   , generationEnemiesSectorMax :: Int -- ^ The max number of enemies to attempt to drop in a Sector
+  }
+
+initGenerationState :: GameConfig -> StdGen -> Quadrant -> GenerationState
+initGenerationState GameConfig {..} stdGen quadrant =
+  GenerationState
+  { generationRandomGen        = stdGen
+  , generationQuadrant         = quadrant
+  , generationStationsMax      = _gameConfigNumStations
+  , generationEnemiesMax       = _gameConfigNumEnemies
+  , generationEnemiesSectorMax = _gameConfigNumEnemiesPerSector
   }
 
 genRandom :: State GenerationState Int
@@ -69,11 +80,13 @@ addSectorStation sectorCoord station = do
       put $ genState { generationQuadrant = quadrant }
       pure $ Just station
 
-generateQuadrant :: (Int, Int) -> StdGen -> (Quadrant, StdGen)
-generateQuadrant shipStartingCoord randGen =
-  let GenerationState {..} =
+generateQuadrant :: GameConfig -> (Int, Int) -> StdGen -> (Quadrant, StdGen)
+generateQuadrant config shipStartingCoord randGen =
+  let initState
+        = initGenerationState config randGen (initQuadrant shipStartingCoord)
+      GenerationState {..} =
         -- TODO (james): move the max num stations to a param
-        (`execState` (GenerationState randGen (initQuadrant shipStartingCoord)) 2 20 3) $ do
+        (`execState` initState) $ do
         generateQuadrantStars
         generateQuadrantEnemyShips
         generateStations

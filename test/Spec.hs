@@ -10,6 +10,7 @@ import Data.Functor.Identity
 import qualified Data.Map as M
 import LambdaTrek.Command
 import LambdaTrek.Command.Parse
+import LambdaTrek.Config
 import LambdaTrek.Simulation
 import LambdaTrek.Simulation.Combat
 import LambdaTrek.Simulation.Dialog
@@ -39,7 +40,7 @@ initialTestGameState gen =
   , _gameStateDialog = []
   , _gameStateRandomGen = gen
   , _gameStateScreen = SectorScreen
-  , _gameStateGameConfig = GameConfig { _gameConfigNumEnemies = 15 }
+  , _gameStateGameConfig = defaultConfig
   }
 
 initTestQuadrant :: (Int, Int) -> Quadrant
