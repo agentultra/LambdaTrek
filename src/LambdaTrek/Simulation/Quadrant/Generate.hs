@@ -85,8 +85,8 @@ generateQuadrantStars = traverse_ generateSectorStars quadrantCoords
 generateSectorStars :: (Int, Int) -> State GenerationState ()
 generateSectorStars coord = do
   numStars <- genRandomBetween (0, 2)
-  starsX <- traverse (const genRandom) [0..numStars]
-  starsY <- traverse (const genRandom) [0..numStars]
+  starsX <- traverse (const genRandom) [0..numStars-1]
+  starsY <- traverse (const genRandom) [0..numStars-1]
 
   forM_ (zip starsX starsY) $ \star ->
     addSectorStar coord star
