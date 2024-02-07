@@ -15,9 +15,11 @@ import LambdaTrek.Simulation.Station
 
 data GenerationState
   = GenerationState
-  { generationRandomGen   :: StdGen
-  , generationQuadrant    :: Quadrant
-  , generationStationsMax :: Int
+  { generationRandomGen        :: StdGen
+  , generationQuadrant         :: Quadrant
+  , generationStationsMax      :: Int
+  , generationEnemiesMax       :: Int -- ^ The max number of enemies to place in the Quadrant
+  , generationEnemiesSectorMax :: Int -- ^ The max number of enemies to attempt to drop in a Sector
   }
 
 genRandom :: State GenerationState Int
@@ -71,7 +73,7 @@ generateQuadrant :: (Int, Int) -> StdGen -> (Quadrant, StdGen)
 generateQuadrant shipStartingCoord randGen =
   let GenerationState {..} =
         -- TODO (james): move the max num stations to a param
-        (`execState` (GenerationState randGen (initQuadrant shipStartingCoord)) 2) $ do
+        (`execState` (GenerationState randGen (initQuadrant shipStartingCoord)) 2 20 3) $ do
         generateQuadrantStars
         generateQuadrantEnemyShips
         generateStations
@@ -82,7 +84,7 @@ generateQuadrantStars = traverse_ generateSectorStars quadrantCoords
 
 generateSectorStars :: (Int, Int) -> State GenerationState ()
 generateSectorStars coord = do
-  numStars <- genRandomBetween (0, 5)
+  numStars <- genRandomBetween (0, 2)
   starsX <- traverse (const genRandom) [0..numStars]
   starsY <- traverse (const genRandom) [0..numStars]
 
@@ -90,15 +92,28 @@ generateSectorStars coord = do
     addSectorStar coord star
 
 generateQuadrantEnemyShips :: State GenerationState ()
-generateQuadrantEnemyShips = traverse_ generateEnemyShips quadrantCoords
+generateQuadrantEnemyShips = generateEnemyShips 0 $ cycle quadrantCoords
 
-generateEnemyShips :: (Int, Int) -> State GenerationState ()
-generateEnemyShips coord = do
-  numEnemies <- genRandomBetween (1, 4)
+generateEnemyShips :: Int -> [(Int, Int)] -> State GenerationState ()
+generateEnemyShips _ [] = pure ()
+generateEnemyShips enemiesCount (sectorCoord:coords) = do
+  GenerationState {..} <- get
+  when (enemiesCount <= generationEnemiesMax) $ do
+    placeEnemyShips enemiesCount sectorCoord
+      >>= \placedCount -> generateEnemyShips (enemiesCount + placedCount) coords
+  pure ()
+
+placeEnemyShips :: Int -> (Int, Int) -> State GenerationState Int
+placeEnemyShips enemiesCount coord = do
+  GenerationState {..} <- get
+  let enemiesMax
+        = min generationEnemiesSectorMax
+        $ generationEnemiesMax - enemiesCount
+  numEnemies <- genRandomBetween (0, enemiesMax)
   enemiesX <- traverse (const genRandom) [0..numEnemies]
   enemiesY <- traverse (const genRandom) [0..numEnemies]
 
-  forM_ (zip enemiesX enemiesY) $ \(eX, eY) -> do
+  placementCounts <- (flip traverse) (zip enemiesX enemiesY) $ \(eX, eY) -> do
     let enemy
           = Enemy
           { enemyPositionX        = eX
@@ -109,7 +124,12 @@ generateEnemyShips coord = do
           , enemyBaseDamageAmount = 10
           }
 
-    addSectorEnemy coord enemy
+    pure . countEnemyPlaced =<< addSectorEnemy coord enemy
+  pure $ sum placementCounts
+  where
+    countEnemyPlaced :: Maybe Enemy -> Int
+    countEnemyPlaced Nothing  = 0
+    countEnemyPlaced (Just _) = 1
 
 generateStations :: State GenerationState ()
 generateStations = do
@@ -128,7 +148,6 @@ goGenerateStations stationCount (sectorCoord:coords) = do
 
 placeStation :: (Int, Int) -> State GenerationState ()
 placeStation sectorCoord = do
-  -- TODO (james) randomize the station position from the empty sector positions.
   quadrant <- generationQuadrant <$> get
   let sector' = getSector quadrant sectorCoord
   maybePosition <- genPickRandom $ emptyCoords sector'
