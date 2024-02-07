@@ -17,6 +17,7 @@ module LambdaTrek.Simulation.Sector
   , emptySectorTiles
   , enemyAtCoord
   , findEmpty
+  , getEmpty
   , getTile
   , listEnemies
   , listStars
@@ -103,12 +104,21 @@ unsafeSetTile x y tile sectorTiles =
   in SectorTiles $ sectorData // [((y * 15) + x, fromEnum tile)]
 
 findEmpty :: SectorTiles -> (Int, Int)
-findEmpty = ixToCoord . fst . head . filter ((== Tile.EmptySpace) . toEnum . snd) . assocs . getSectorTiles
-  where
-    ixToCoord :: Int -> (Int, Int)
-    ixToCoord x =
-      let w = 15
-      in (x `div` w, x `rem` w)
+findEmpty
+  = ixToCoord
+  . fst
+  . head
+  . filter ((== Tile.EmptySpace) . toEnum . snd)
+  . assocs
+  . getSectorTiles
+
+getEmpty :: SectorTiles -> [(Int, Int)]
+getEmpty = map (ixToCoord . fst) . filter ((== Tile.EmptySpace) . toEnum . snd) . assocs . getSectorTiles
+
+ixToCoord :: Int -> (Int, Int)
+ixToCoord x =
+  let w = 15
+  in (x `div` w, x `rem` w)
 
 buildSectorTiles :: Sector -> SectorTiles
 buildSectorTiles sector' =

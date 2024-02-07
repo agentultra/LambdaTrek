@@ -12,6 +12,7 @@ import LambdaTrek.Simulation.Dialog
 import LambdaTrek.Simulation.Quadrant
 import LambdaTrek.Simulation.Quadrant.Generate
 import LambdaTrek.Simulation.Ship
+import LambdaTrek.Simulation.Ship.Generate
 import Lens.Micro
 import Lens.Micro.Mtl
 import Lens.Micro.TH
@@ -44,16 +45,17 @@ makeLenses ''GameState
 initialGameState :: GameConfig -> StdGen -> GameState
 initialGameState config gen =
   let (quadrant, stdGen) = generateQuadrant config (0, 0) gen
+      (playerStartingShip, playerQuadrant, stdGen') = generateStartingShip quadrant stdGen
   in GameState
      { _gameStateCommandInput   = ""
      , _gameStateCommand        = Nothing
      , _gameStateCommandError   = Nothing
      , _gameStateQuadrant       = quadrant
-     , _gameStateSector         = (0, 0)
-     , _gameStateShip           = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
+     , _gameStateSector         = playerQuadrant
+     , _gameStateShip           = playerStartingShip
      , _gameStateRemainingTurns = 200
      , _gameStateDialog         = []
-     , _gameStateRandomGen      = stdGen
+     , _gameStateRandomGen      = stdGen'
      , _gameStateScreen         = SectorScreen
      , _gameStateGameConfig     = config
      }

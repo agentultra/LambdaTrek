@@ -10,6 +10,7 @@ import Data.Text (Text)
 import LambdaTrek.Simulation.Position
 import Lens.Micro
 import Lens.Micro.TH
+import System.Random
 
 data ShieldState = ShieldsUp | ShieldsDown
   deriving (Eq, Ord, Show)

@@ -43,6 +43,7 @@ library
       LambdaTrek.Simulation.Sector
       LambdaTrek.Simulation.Sector.Internal
       LambdaTrek.Simulation.Ship
+      LambdaTrek.Simulation.Ship.Generate
       LambdaTrek.Simulation.Station
       LambdaTrek.Simulation.Tile
       LambdaTrek.State
