@@ -31,17 +31,17 @@ data GameConfig
 
 data GameState
   = GameState
-  { _gameStateCommandInput :: Text
-  , _gameStateCommand :: Maybe Command
-  , _gameStateCommandError :: Maybe Text
-  , _gameStateQuadrant :: Quadrant
-  , _gameStateSector :: (Int, Int)
-  , _gameStateShip :: Ship
+  { _gameStateCommandInput   :: Text
+  , _gameStateCommand        :: Maybe Command
+  , _gameStateCommandError   :: Maybe Text
+  , _gameStateQuadrant       :: Quadrant
+  , _gameStateSector         :: (Int, Int)
+  , _gameStateShip           :: Ship
   , _gameStateRemainingTurns :: Int
-  , _gameStateDialog :: [Dialog]
-  , _gameStateRandomGen :: StdGen
-  , _gameStateScreen :: GameScreen
-  , _gameStateGameConfig :: GameConfig
+  , _gameStateDialog         :: [Dialog]
+  , _gameStateRandomGen      :: StdGen
+  , _gameStateScreen         :: GameScreen
+  , _gameStateGameConfig     :: GameConfig
   }
   deriving (Eq, Show)
 
@@ -51,17 +51,17 @@ initialGameState :: StdGen -> GameState
 initialGameState gen =
   let (quadrant, stdGen) = generateQuadrant (0, 0) gen
   in GameState
-     { _gameStateCommandInput = ""
-     , _gameStateCommand = Nothing
-     , _gameStateCommandError = Nothing
-     , _gameStateQuadrant = quadrant
-     , _gameStateSector = (0, 0)
-     , _gameStateShip = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
+     { _gameStateCommandInput   = ""
+     , _gameStateCommand        = Nothing
+     , _gameStateCommandError   = Nothing
+     , _gameStateQuadrant       = quadrant
+     , _gameStateSector         = (0, 0)
+     , _gameStateShip           = Ship 2 2 100 6 30 ShieldsDown 0.75 5 WarpFactorOne
      , _gameStateRemainingTurns = 200
-     , _gameStateDialog = []
-     , _gameStateRandomGen = stdGen
-     , _gameStateScreen = SectorScreen
-     , _gameStateGameConfig = GameConfig { _gameConfigNumEnemies = 15 }
+     , _gameStateDialog         = []
+     , _gameStateRandomGen      = stdGen
+     , _gameStateScreen         = SectorScreen
+     , _gameStateGameConfig     = GameConfig { _gameConfigNumEnemies = 15 }
      }
 
 say :: Crewmate -> Text -> [Dialog] -> [Dialog]
