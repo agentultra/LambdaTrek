@@ -54,8 +54,8 @@ addStation sectorCoord station quadrant
 availableSpace :: Quadrant -> (Int, Int) -> Bool
 availableSpace _ = const True
 
-initQuadrant :: (Int, Int) -> Quadrant
-initQuadrant startingCoord =
+initQuadrant :: Quadrant
+initQuadrant =
   let sectorStarMap
         = M.fromList
         [ (coord, [])
@@ -75,7 +75,7 @@ initQuadrant startingCoord =
      { _quadrantStars = sectorStarMap
      , _quadrantEnemyShips = sectorEnemyShipMap
      , _quadrantStations = sectorStationMap
-     , _quadrantScanState = M.singleton startingCoord True
+     , _quadrantScanState = mempty
      }
 
 getSector :: Quadrant -> (Int, Int) -> Sector
@@ -138,7 +138,7 @@ renderQuadrantData = \case
     "| " <> renderHasShips <> renderHasStations <> renderHasPlayerShip <> " |"
     where
       renderHasShips = if quadrantTileHasEnemyShips then "<" else " "
-      renderHasStations = if quadrantTileHasStarbase then "$" else "?"
+      renderHasStations = if quadrantTileHasStarbase then "$" else " "
       renderHasPlayerShip = if quadrantTileHasPlayerShip then "S" else " "
   Unscanned -> "|  ?  |"
 

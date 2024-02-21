@@ -80,10 +80,10 @@ addSectorStation sectorCoord station = do
       put $ genState { generationQuadrant = quadrant }
       pure $ Just station
 
-generateQuadrant :: GameConfig -> (Int, Int) -> StdGen -> (Quadrant, StdGen)
-generateQuadrant config shipStartingCoord randGen =
+generateQuadrant :: GameConfig -> StdGen -> (Quadrant, StdGen)
+generateQuadrant config randGen =
   let initState
-        = initGenerationState config randGen (initQuadrant shipStartingCoord)
+        = initGenerationState config randGen initQuadrant
       GenerationState {..} =
         -- TODO (james): move the max num stations to a param
         (`execState` initState) $ do

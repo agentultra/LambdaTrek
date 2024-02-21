@@ -44,13 +44,13 @@ makeLenses ''GameState
 
 initialGameState :: GameConfig -> StdGen -> GameState
 initialGameState config gen =
-  let (quadrant, stdGen) = generateQuadrant config (0, 0) gen
+  let (quadrant, stdGen) = generateQuadrant config gen
       (playerStartingShip, playerQuadrant, stdGen') = generateStartingShip quadrant stdGen
   in GameState
      { _gameStateCommandInput   = ""
      , _gameStateCommand        = Nothing
      , _gameStateCommandError   = Nothing
-     , _gameStateQuadrant       = quadrant
+     , _gameStateQuadrant       = scanQuadrant playerQuadrant quadrant
      , _gameStateSector         = playerQuadrant
      , _gameStateShip           = playerStartingShip
      , _gameStateRemainingTurns = 200
