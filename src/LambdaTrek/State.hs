@@ -22,6 +22,7 @@ data GameScreen
   = SectorScreen
   | QuadrantScreen
   | GameOverScreen
+  | SettingsScreen
   deriving (Bounded, Enum, Eq, Show)
 
 data GameState

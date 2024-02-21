@@ -103,6 +103,9 @@ gameOverScreen f =
   let gameState = formState f
   in str ("Game Over: " ++ show (gameState^.(gameStateShip . Ship.energy)))
 
+settingsScreen :: Widget Name
+settingsScreen = str "Settings!"
+
 ui :: Form GameState e Name -> Widget Name
 ui f =
   let gameState = formState f
@@ -116,6 +119,7 @@ ui f =
           <+> vBorder
           <+> hLimitPercent 30 (infoPanel f <=> hBorder <=> commandPallet f)
         GameOverScreen -> gameOverScreen f
+        SettingsScreen -> settingsScreen
   in joinBorders $
      withBorderStyle unicode $
      borderWithLabel

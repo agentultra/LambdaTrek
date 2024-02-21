@@ -39,6 +39,9 @@ lambdaHandleEvent ev = case ev of
   VtyEvent (V.EvKey (V.KFun 2) _) -> do
     s <- gets formState
     modify . updateFormState . (\s' -> s' & gameStateScreen .~ SectorScreen) $ s
+  VtyEvent (V.EvKey (V.KFun 3) _) -> do
+    s <- gets formState
+    modify . updateFormState . (\s' -> s' & gameStateScreen .~ SettingsScreen) $ s
   VtyEvent (V.EvKey V.KEnter []) -> do
     s <- gets formState
     case runCommandParser . T.unpack . T.strip. T.toUpper $ s^.gameStateCommandInput of

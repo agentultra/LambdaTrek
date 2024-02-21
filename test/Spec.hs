@@ -474,7 +474,7 @@ main = hspec $ do
             availableSpace (initTestQuadrant (0, 0)) (0, 0) `shouldBe` True
 
         context "Given a sector with only 1 empty space" $ do
-          fit "should be False" $ do
+          it "should be False" $ do
             let quadrantWithMostlyFullSector = testFillSector (1, 1) $ initTestQuadrant (0, 0)
             availableSpace quadrantWithMostlyFullSector (1, 1) `shouldBe` False
             where
