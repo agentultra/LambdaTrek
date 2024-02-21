@@ -50,9 +50,15 @@ addStation sectorCoord station quadrant
     quadrant { _quadrantStations = M.adjust ((:) station) sectorCoord quadrant._quadrantStations }
   | otherwise = Nothing
 
--- TODO (james): actually implement this
+-- | Check if there's available space to place an object /other than/
+-- the player ship.  There is always one space reserved for the player.
 availableSpace :: Quadrant -> (Int, Int) -> Bool
-availableSpace _ = const True
+availableSpace quadrant sectorCoord =
+  let sector = getSector quadrant sectorCoord
+      numEnemyShips = length $ listEnemies sector
+      numStations = length $ listStars sector
+      numStars = length $ listStations sector
+  in 15 * 15 - (numEnemyShips + numStations + numStars) > 1
 
 initQuadrant :: Quadrant
 initQuadrant =

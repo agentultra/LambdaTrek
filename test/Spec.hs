@@ -467,5 +467,28 @@ main = hspec $ do
               -- TODO: add ship back in here
           findEmpty sectorTiles `shouldBe` (14, 14)
 
+    describe "Quadrant" $ do
+      describe "availableSpace" $ do
+        context "Given a mostly empty sector" $ do
+          it "should be True" $ do
+            availableSpace (initTestQuadrant (0, 0)) (0, 0) `shouldBe` True
+
+        context "Given a sector with only 1 empty space" $ do
+          fit "should be False" $ do
+            let quadrantWithMostlyFullSector = testFillSector (1, 1) $ initTestQuadrant (0, 0)
+            availableSpace quadrantWithMostlyFullSector (1, 1) `shouldBe` False
+            where
+              testFillSector :: (Int, Int) -> Quadrant -> Quadrant
+              testFillSector sectorCoord quadrant =
+                let starCoords = [(x, y) | x <- [0..14], y <- [0..14]]
+                in go starCoords sectorCoord quadrant
+
+              go :: [(Int, Int)] -> (Int, Int) -> Quadrant -> Quadrant
+              go [] _ q = q
+              go (starCoord:ss) sc q =
+                case addStar sc starCoord q of
+                  Nothing -> q
+                  Just q' -> go ss sc q'
+
 hasDialog :: Dialog -> [Dialog] -> Bool
 hasDialog = elem
