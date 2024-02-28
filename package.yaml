@@ -42,6 +42,7 @@ library:
     - microlens-mtl
     - microlens-th
     - mtl
+    - optparse-applicative
     - random
     - split
     - text
