@@ -44,7 +44,14 @@ lambdaHandleEvent ev = case ev of
     modify . updateFormState . (\s' -> s' & gameStateScreen .~ SettingsScreen) $ s
   VtyEvent (V.EvKey V.KEnter []) -> do
     s <- gets formState
-    case runCommandParser . T.unpack . T.strip. T.toUpper $ s^.gameStateCommandInput of
+    if s^.gameStateGameOver
+      then pure ()
+      else runCommand s
+  _ -> handleFormEvent ev
+
+runCommand :: GameState -> EventM Name (Form GameState e Name) ()
+runCommand s =
+  case runCommandParser . T.unpack . T.strip. T.toUpper $ s^.gameStateCommandInput of
       Left commandError ->
         modify
         . updateFormState
@@ -62,7 +69,6 @@ lambdaHandleEvent ev = case ev of
             , _gameStateCommandError = Nothing
             , _gameStateCommandInput = ""
             }
-  _ -> handleFormEvent ev
 
 lambdaChooseCursor :: Form GameState e Name -> [CursorLocation Name] -> Maybe (CursorLocation Name)
 lambdaChooseCursor _ _ = Nothing
@@ -80,5 +86,6 @@ checkForGameOver :: GameState -> GameState
 checkForGameOver gameState =
   let ship = gameState^.gameStateShip
   in if ship^.energy <= 0 || ship^.hull <= 0
-     then gameState & gameStateScreen .~ GameOverScreen
+     then gameState & (gameStateGameOver .~ True)
+                    . (gameStateScreen .~ GameOverScreen)
      else gameState

@@ -49,8 +49,15 @@ infoPanel f =
 
 commandPallet :: Form GameState e Name -> Widget Name
 commandPallet f =
-  let commandErrorWidget = maybe emptyWidget (withAttr (attrName "highlight-error") . txtWrap) $ formState f^.gameStateCommandError
-  in vLimit 3 (center (commandErrorWidget <=> renderForm f))
+  let commandErrorWidget
+        = maybe emptyWidget (withAttr (attrName "highlight-error") . txtWrap)
+        $ formState f^.gameStateCommandError
+  in vLimit 3 (center (commandErrorWidget <=> renderCommandInput f))
+  where
+    renderCommandInput :: Form GameState e Name -> Widget Name
+    renderCommandInput f' =
+      let s = formState f'
+      in if s^.gameStateGameOver then str "GAME OVER" else renderForm f'
 
 dialog :: Dialog -> Widget Name
 dialog (Dialog crewmate msg) =

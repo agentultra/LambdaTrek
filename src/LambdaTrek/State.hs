@@ -38,6 +38,7 @@ data GameState
   , _gameStateRandomGen      :: StdGen
   , _gameStateScreen         :: GameScreen
   , _gameStateGameConfig     :: GameConfig
+  , _gameStateGameOver       :: Bool
   }
   deriving (Eq, Show)
 
@@ -59,6 +60,7 @@ initialGameState config gen =
      , _gameStateRandomGen      = stdGen'
      , _gameStateScreen         = SectorScreen
      , _gameStateGameConfig     = config
+     , _gameStateGameOver       = False
      }
 
 say :: Crewmate -> Text -> [Dialog] -> [Dialog]
