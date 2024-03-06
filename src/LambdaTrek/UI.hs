@@ -19,6 +19,7 @@ import LambdaTrek.Simulation.Dialog
 import qualified LambdaTrek.Simulation.Quadrant as Quadrant
 import qualified LambdaTrek.Simulation.Sector as Sector
 import qualified LambdaTrek.Simulation.Ship as Ship
+import LambdaTrek.UI.WrapText
 import LambdaTrek.State
 import Lens.Micro
 
@@ -62,7 +63,7 @@ commandPallet f =
 dialog :: Dialog -> Widget Name
 dialog (Dialog crewmate msg) =
   let dialogStr = Vty.string (fromCrewmate crewmate) (crewmateTxt crewmate)
-        Vty.<|> Vty.string Vty.defAttr (Text.unpack msg)
+        Vty.<|> renderWrapText msg
   in raw dialogStr
   where
     fromCrewmate :: Crewmate -> Vty.Attr
@@ -77,7 +78,8 @@ dialog (Dialog crewmate msg) =
 
 -- TODO: figure out why vLimit isn't actually working..
 sectorDialog :: GameState -> Widget Name
-sectorDialog gameState = withVScrollBars OnRight . viewport SectorDialog Vertical . combineDialogs $ gameState^.gameStateDialog
+sectorDialog gameState =
+  withVScrollBars OnRight . viewport SectorDialog Vertical . combineDialogs $ gameState^.gameStateDialog
   where
     combineDialogs :: [Dialog] -> Widget Name
     combineDialogs = foldl' (<=>) emptyWidget . map dialog

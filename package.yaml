@@ -47,6 +47,7 @@ library:
     - split
     - text
     - vty
+    - word-wrap
 
 executables:
   lambdatrek:
