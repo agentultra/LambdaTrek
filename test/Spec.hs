@@ -41,6 +41,7 @@ initialTestGameState gen =
   , _gameStateRandomGen = gen
   , _gameStateScreen = SectorScreen
   , _gameStateGameConfig = defaultConfig
+  , _gameStateGameOver = False
   }
 
 initTestQuadrant :: (Int, Int) -> Quadrant
