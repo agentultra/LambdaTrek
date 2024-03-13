@@ -47,6 +47,12 @@ lambdaHandleEvent ev = case ev of
     if s^.gameStateGameOver
       then pure ()
       else runCommand s
+  VtyEvent (V.EvKey V.KDown []) -> do
+    let scrollHandle = viewportScroll SectorDialog
+    vScrollBy scrollHandle 1
+  VtyEvent (V.EvKey V.KUp []) -> do
+    let scrollHandle = viewportScroll SectorDialog
+    vScrollBy scrollHandle (-1)
   _ -> handleFormEvent ev
 
 runCommand :: GameState -> EventM Name (Form GameState e Name) ()
