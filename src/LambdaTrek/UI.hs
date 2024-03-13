@@ -62,9 +62,13 @@ commandPallet f =
 
 dialog :: Dialog -> Widget Name
 dialog (Dialog crewmate msg) =
-  let dialogStr = Vty.string (fromCrewmate crewmate) (crewmateTxt crewmate)
-        Vty.<|> renderWrapText msg
-  in raw dialogStr
+  Widget Greedy Fixed $ do
+    renderCtx <- getContext
+    let crewColor = fromCrewmate crewmate
+        crewName = crewmateTxt crewmate
+        dialogStr = Vty.string crewColor crewName
+                    Vty.<|> renderWrapText (renderCtx^.availWidthL - textWidth crewName) msg
+    pure $ emptyResult & imageL .~ dialogStr
   where
     fromCrewmate :: Crewmate -> Vty.Attr
     fromCrewmate = \case

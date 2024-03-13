@@ -8,7 +8,7 @@ import Graphics.Vty.Image ((<->))
 import qualified Graphics.Vty.Image as Vty
 import Text.Wrap
 
-renderWrapText :: Text -> Vty.Image
-renderWrapText line =
-  let ls = wrapTextToLines defaultWrapSettings 30 line
+renderWrapText :: Int -> Text -> Vty.Image
+renderWrapText lineWidth line =
+  let ls = wrapTextToLines defaultWrapSettings lineWidth line
   in foldl' (<->) Vty.emptyImage . map (Vty.string Vty.defAttr . Text.unpack) $ ls
